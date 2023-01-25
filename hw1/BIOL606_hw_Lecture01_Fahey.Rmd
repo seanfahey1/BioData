@@ -1,0 +1,168 @@
+---
+title: "Fahey Biol606 Lec01"
+author: "Sean Fahey"
+date: "2023-01-18"
+output: html_document
+---
+
+This r setup at the top of a file is like an import block in python
+```{r setup}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+library(tidyverse)
+
+# clear global variables just in case this gets run out of order
+rm(list = ls())
+```
+
+
+## Inclass work
+
+```{r inclass}
+x = c(0,1,1,0,2,1,3,NA,1,3,NA)
+o = c(mean(x, na.rm=TRUE)) # na.rm removes NA for the calculation
+o = c(o, median(x, na.rm=TRUE))
+o = c(o, sd(x, na.rm=TRUE))
+o = c(o, var(x, na.rm=TRUE))
+o
+```
+
+## HW 1 Section
+
+```{r snowmelt, message=TRUE, warning=FALSE, echo=TRUE}
+setwd("/Users/sean/workspace/Sean/SDSU/BDA606/hw1")
+articdata = read.csv("NEE_snowmelt_Biol606.csv", header=TRUE)
+
+
+# question 1
+mean_cumC_uptake_Jun_Aug = mean(articdata[["CumC_uptake_Jun_Aug"]], na.rm=TRUE)
+sd_cumC_uptake_Jun_Aug = sd(articdata[["CumC_uptake_Jun_Aug"]], na.rm=TRUE)
+
+
+# question 2
+snowfreeperiod = articdata[["SNOW_FALL_START_MODIS"]] - articdata[["SNOW_MELT_DATE_MODIS"]]
+
+articdata = cbind(articdata, Snow_Free_Period = snowfreeperiod)
+
+
+# question 3
+precipitationDF = data.frame(
+  non_log_precipitation = articdata[["precipitation_Jun_Aug"]],
+  log_precipitation = log(articdata[["precipitation_Jun_Aug"]]),
+  Snow_Free_Period = snowfreeperiod
+  )
+write.csv(precipitationDF, "precipitation_data.csv", row.names=FALSE)
+
+# question 5
+# I'm making scatter plots of each of the two given variables to explore the dataset
+
+# Hypothesis 1: The length of the snow free period is mostly controlled by fall temperatures.
+ggplot(
+  articdata, 
+  aes(x=airT_Sept_mean, 
+      y=Snow_Free_Period)
+  ) + geom_point(
+  size=2,
+  shape=20
+) + xlab("Fall Temperature") + ylab("Snow Free Period")
+# It looks like the snow free period does increase with the fall temperature
+
+# Hypothesis 2: An earlier snow melt will result in an increased uptake of carbon by Arctic tundra.
+
+ggplot(
+  articdata, 
+  aes(x=SNOW_MELT_DATE_MODIS, 
+      y=CumC_uptake_Jun_Aug)
+  ) + 
+  geom_point(
+  size=2,
+  shape=20
+  ) + 
+  xlab("Snow Melt Date (day of year)") + 
+  ylab("Carbon Uptake Jun-Aug") +
+  geom_smooth(method='lm', formula= y~x)
+# It looks like later snow melt dates result in more carbon uptake 
+
+```
+
+
+## Beckerman Reading Section
+
+```{r beckerman, message=TRUE, warning=FALSE, echo=TRUE}
+
+compensation <- read.csv("../Beckerman-datasets-master/compensation.csv")
+
+# views the array 
+glimpse(compensation)
+
+# scatter plot example
+ggplot(
+  compensation, 
+  aes(
+    x = Root, 
+    y = Fruit,
+    color = Grazing
+    )) +
+  
+  geom_point(
+    size = 5 # sets the marker size
+  ) +
+  
+  theme_bw() + # changes the background color
+  
+  # axis labels
+  xlab("Root Biomass") +
+  ylab("Fruit Production")
+ggsave("scatterplot-root-v-fruit.png")
+
+# larger root size corresponds to more fruit production
+
+
+
+# box and whisker plot example
+
+ggplot(
+  compensation, 
+  aes(
+    x = Grazing, 
+    y = Fruit
+    )) +
+  geom_boxplot() + # sets plot type to box and whisker
+  
+  geom_point(
+    size = 4, 
+    color = "lightgrey", # marker point color
+    alpha = .5 # transparency
+    ) +
+  
+  theme_bw() + # sets background color
+  
+  # axis labels
+  xlab("Grazing treatment") +
+  ylab("Fruit Production")
+ggsave("boxplot-grazing-v-fruit.png")
+
+
+# grazed plants tend to produce more fruit
+
+
+# histogram plot example
+
+ggplot(
+  compensation, 
+  aes(
+    x = Fruit
+    )) +
+  
+  geom_histogram( # sets plot type to histogram
+    binwidth = 10
+    ) +
+  
+  facet_wrap(~Grazing) + # splits the plot into 2 side-by-side by the grazing value
+  
+  xlab("Fruit Production") # axis labels
+
+ggsave("histogram-grazing-v-fruit.png")
+
+```
+
+

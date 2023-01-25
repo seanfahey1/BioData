@@ -1,0 +1,141 @@
+---
+title: "HW02"
+author: "Sean Fahey"
+date: "2023-01-23"
+output: html_document
+---
+
+
+# Setup library, clear variables to start
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+library(tidyverse)
+
+# clear global variables just in case this gets run out of order
+rm(list = ls())
+```
+
+# In class stuff
+### Base graphing
+``` {r inclass}
+# base graphics
+integer.data = c(5, 6, 7, 8, 9, 8, 7, 6, 5, 4)
+category.data = factor(c("a", "a", "a", "a", "b", "b", "c", "c", "a", "b"))
+random.data = runif(10,0,1) # random uniform distribution. (number of values, min, max)
+
+plot(integer.data)
+plot(category.data)
+plot(random.data ~ integer.data)
+plot(integer.data ~ category.data)
+
+plot(sin, -pi*3, pi*3)
+plot(integer.data, random.data)
+```
+
+### ggplot2
+``` {r inclass2}
+snowmelt <- read.csv("NEE_snowmelt_Biol606.csv") 
+# view(snowmelt)
+
+gggraph <- ggplot(snowmelt, 
+  aes(
+    x = SNOW_MELT_DATE_MODIS, 
+    y = CumC_uptake_Jun_Aug, 
+    color = SITE,
+    # shape = VEG_TYPE
+    ))
+
+gggraph + 
+  geom_point(
+    shape =19, 
+    size =2) +
+  
+  geom_smooth(
+    formula = y ~ x,
+    method = lm, # lm = linear model
+    level = 0,
+    # confidence interval to shade around line of best fit
+    ) +
+  facet_wrap(~VEG_TYPE)
+
+
+```
+
+# Homework
+``` {r hw_lec02}
+snowmelt <- read.csv("NEE_snowmelt_Biol606.csv") 
+
+# Question 1: Use the snowmelt data to make each of the two following figures, which plot C uptake against precipitation, with data depicted by site
+# First graph
+gggraph = ggplot(
+  snowmelt, 
+  aes(
+    x = precipitation_Jun_Aug, 
+    y = CumC_uptake_Jun_Aug, 
+    color = SITE # split sites by color
+    )) + 
+  geom_point(
+    shape = 19, 
+    size = 1) # point size in the image we're reproducing looks pretty small
+
+gggraph
+
+# Second graph
+gggraph2 = gggraph + 
+  facet_wrap(
+    ~SITE, # split into multiple graphs by SITE
+    ncol = 7) + # line the graphs up as columns instead of a grid
+  geom_point(size=2) # increase the point size
+
+gggraph2
+
+
+# Question 2: Use the ggplot cheat sheet to update figure 1: add better axis labels, adjust the x- and y-axis ranges, and alter the theme. Can you find other ways to just make the graph easier to read and look prettier in general? Annotate your script to explain how you did it.
+gggraph3 = gggraph2 + 
+  labs( # set the axis and title labels for the plot
+    x = "Summer Precipitation",
+    y = "Summer Carbon Uptake",
+    title = "Carbon Uptake v. Precipitation throughout Summer by Site"
+  ) + 
+  theme_bw() + # change the theme
+  facet_grid( # different method to handle column style facet plots
+    ~SITE, 
+    scales = "free_x") # allow x axis to be different between facet plots
+
+gggraph3
+
+
+# Question 3: 3. Now update figure 2, including making the values on the x-axis more readable. Can you change the order in which the sites are shown? 
+snowmelt$SITE2 <- reorder(snowmelt$SITE, snowmelt$precipitation_Jun_Aug) # create a new column SITE2 that sorts on precipitation_Jun_Aug
+
+gggraph4 = ggplot(
+  snowmelt, 
+  aes(
+    x = precipitation_Jun_Aug, 
+    y = CumC_uptake_Jun_Aug, 
+    color = SITE2
+    )) + 
+  geom_point(
+    shape = 19, 
+    size = 1) + # point size in the image we're reproducing looks pretty small
+  facet_grid( # column style facet plots
+    ~SITE2, # split into multiple graphs by SITE2 (the sorted factor column)
+    scales = "free_x") + # allow x axis to be different between facet plots
+  geom_point(size=2) + # increase the point size
+  labs( # set the axis and title labels for the plot
+    x = "Summer Precipitation",
+    y = "Summer Carbon Uptake",
+    title = "Carbon Uptake v. Precipitation throughout Summer by Site"
+  ) + 
+  guides(
+    x = guide_axis(n.dodge=2) # set x axis ticks to 2 levels so they don't overlap
+    ) +
+  theme_bw() # change the theme
+
+gggraph4
+
+ggsave("figure1.pdf", plot=gggraph)
+ggsave("figure2.pdf", plot=gggraph4)
+
+```
+
