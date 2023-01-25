@@ -40,5 +40,4 @@ vignettes/*.pdf
 
 # personal stuff
 .DS_Store
-*datasets*
 /peer-reviews/
