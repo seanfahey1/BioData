@@ -1,0 +1,92 @@
+---
+title: "BIOL606_hw_Lecture03_Fahey.Rmd"
+author: "Sean Fahey"
+date: "2023-01-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+
+
+```
+
+
+```{r checking-dataset}
+
+compensation <- read.csv("../Beckerman-datasets-master/compensation.csv")
+
+glimpse(compensation) # check th dataset valeus
+
+summary(compensation) # get summary statistics of each column
+
+```
+
+```{r dyplr-functions}
+# Select columns
+select(compensation, Fruit) # select grabs a column by name
+select(compensation, Fruit, Root) # multiple columns
+select(compensation, -Root) # select all but root
+
+# Slice rows
+slice(compensation, 4) # grab row 4
+slice(compensation, 2:10) # grabs rows 2-10 (includes final number)
+slice(compensation, c(2, 3, 10, 12, 13)) # grabs rows 2, 3, 10, 12, and 13
+
+# with to show T/F mask
+with(compensation, Fruit > 40) # converts column to boolean T/F based on value (useful as a mask)
+
+# filter using same logic as with
+filter(compensation, Fruit > 80) # no need to generate mask and pass directly. Filter handles this for me.
+filter(compensation, Fruit > 60 | Fruit < 30) # multiple parameters
+
+lo_hi_fruit <- filter(compensation, Fruit > 80 | Fruit < 20) # assign it to a value
+
+```
+
+
+```{r transforming}
+head(compensation) # same as Pandas head 
+
+compensation <- mutate(compensation, logFruit = log(Fruit)) # mutate creates a new column that's transformed from the data given in the dataframe
+head(compensation)
+
+arrange(compensation, Fruit) # sort by column Fruit
+
+
+```
+
+
+``` {r combining-multiple-methods}
+# selects all columns other than Fruit and logFruit where Fruit is > 60, then sorts ascending by root, then gets first 10 rows
+slice(
+  arrange(
+    select(
+      filter(
+        compensation, Fruit > 60), 
+      -Fruit, -logFruit), 
+    Root), 
+  1:10) 
+
+```
+
+
+```{r mlutiple-methods}
+
+# working inside to outside. Group first, then summarize.
+summarise(
+  group_by(compensation, Grazing),
+  meanFruit = mean(Fruit),
+  sdFruit = sd(Fruit)
+  )
+
+# pipe each output to the next comand. Work top to bottom
+compensation %>%
+  group_by(Grazing) %>%
+  summarise(meanFruit = mean(Fruit), sdFruit = sd(Fruit))
+
+```
+
+
