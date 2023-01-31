@@ -321,8 +321,214 @@ sumDat<-daphnia %>%
 
 # Beckerman ch 6
 
+```{r load dataset and inspect}
+growth.moo = read.csv("../Beckerman-datasets-master/growth.csv")
+glimpse(growth.moo)
+
+growth.moo$diet <- as.factor(growth.moo$diet) # convert to a factor for levels to work
+growth.moo$supplement <- as.factor(growth.moo$supplement) 
+
+levels(growth.moo$diet)
+levels(growth.moo$supplement)
+```
+
+```{r mean and sd}
+sumMoo <- growth.moo %>%
+  group_by(diet, supplement) %>%
+  summarise(meanGrow = mean(gain))
+
+sumMoo
+```
+
+```{r plot suppliment type vs weight}
+ggplot(
+  sumMoo, 
+  aes(
+    x = supplement, 
+    y = meanGrow)
+  ) +
+geom_point() +
+theme_bw()
+```
+
+```{r plot again with color}
+ggplot(
+  sumMoo, 
+  aes(
+    x = supplement, 
+    y = meanGrow, 
+    colour = diet, 
+    group = diet)
+  ) +
+geom_point() +
+geom_line() +
+theme_bw()
+```
+
+```{r linear model}
+model_cow <- lm(
+  gain ~ diet * supplement, 
+  data = growth.moo
+  )
+
+autoplot(model_cow, smooth.colour =NA)
+```
+
+```{r annova}
+anova(model_cow)
+```
+
+```{r summary}
+summary(model_cow)
+```
+
+```{r plot mean and sd}
+sumMoo <- growth.moo %>%
+  group_by(diet, supplement) %>%
+  summarise(
+  meanGrow = mean(gain),
+  seGrow = sd(gain)/sqrt(n())
+)
+
+ggplot(sumMoo, 
+   aes(
+      x = supplement, 
+      y = meanGrow, 
+      colour = diet, 
+      group = diet)
+   ) +
+geom_point() +
+geom_line() +
+geom_errorbar(
+  aes(
+    ymin = meanGrow - seGrow,
+    ymax = meanGrow + seGrow), 
+  width = 0.1) +
+theme_bw()
+```
+
+```{r limp dataset load and inspect}
+
+limp = read.csv("../Beckerman-datasets-master/limpet.csv")
+limp$SEASON <- as.factor(limp$SEASON) # convert to a factor for levels to work
+
+glimpse(limp)
+
+```
+
+``` {r start by plotting}
+ggplot(
+  limp, 
+  aes(
+    x = DENSITY, 
+    y = EGGS, 
+    colour = SEASON)
+  ) +
+geom_point() +
+scale_color_manual(
+  values = c(
+    spring="green", 
+    summer="red")
+  ) +
+theme_bw()
+
+```
+
+``` {r set up and inspect linear model}
+
+limp.mod <- lm(EGGS ~ DENSITY * SEASON, data = limp)
+names(limp.mod)
+summary(limp.mod)
+
+```
+
+``` {r plot linear model}
+autoplot(limp.mod, smooth.colour = NA)
+```
+
+```{r annova of lienar model}
+anova(limp.mod)
+```
+
+```{r expand grid}
+# sets up a grid with all possible options as rows
+expand.grid(FIRST = c("A", "B"), SECOND = c(1, 2))
+```
+
+```{r uses predict }
+predict(limp.mod) # predict number of eggs using our linear model
+```
+
+```{r predict using fake values of density and season}
+new.x <- expand.grid( # generate all possible combinations
+  DENSITY = seq( # set density to values 8 to 45, 10 values evenly spaced
+    from = 8, 
+    to = 45, 
+    length.out = 10),
+  SEASON = levels(limp$SEASON) # every value of season
+  )
+head(new.x)
+
+new.y <- predict(
+  limp.mod,
+  newdata=new.x,
+  interval = 'confidence')
+
+new.y
+```
 
 
+```{r}
+new.data <- data.frame(new.x, new.y)
+new.data <- rename(new.data, EGGS = fit) 
+new.data
+```
 
+```{r predict using mean value of density}
+new.x2 <-expand.grid(
+  DENSITY = mean(limp$DENSITY), # using only the mean value of density
+  SEASON = levels(limp$SEASON)) # using both seasons
 
+predEgg <- predict(
+  limp.mod, 
+  newdata = new.x2) 
+
+EggAtMeanDens <- data.frame(new.x2, predEgg)
+
+head(EggAtMeanDens)
+```
+
+```{r plot it}
+ggplot(
+  limp, 
+  aes(
+    x = DENSITY, 
+    y = EGGS, 
+    colour = SEASON)
+  ) +
+  
+geom_point(size = 5) +
+  
+# now add the fits and CIs
+geom_smooth(
+  data = new.data, 
+  aes(
+    ymin = lwr, 
+    ymax = upr, 
+    fill = SEASON), 
+  stat = 'identity') +
+  
+scale_colour_manual( # adjusting colors
+  values = c(
+    spring="green", 
+    summer="red")
+  ) +
+scale_fill_manual(
+  values = c(
+    spring="green", 
+    summer="red")
+  ) +
+
+theme_bw()
+```
 
