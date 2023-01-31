@@ -1,0 +1,144 @@
+---
+title: "BIOL606_hw_Lecture04_Fahey.Rmd"
+author: "Sean Fahey"
+date: "2023-01-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(ggplot2)
+```
+
+```{r question 1}
+# Import both data files, call them "cucumberdamage" and "flowercounts".
+
+flowercounts <- read.csv("lecture3_flowercounts.csv")
+flowercounts$plant <- as.factor(flowercounts$plant) # this converts the plant column from an integer to a factor datatype
+
+summary(flowercounts)
+head(flowercounts)
+
+cucumberdamage <- read.csv("lecture3_cucumberdamage.csv")
+cucumberdamage$plant <- as.factor(cucumberdamage$plant)
+
+summary(cucumberdamage)
+head(cucumberdamage)
+```
+
+```{r question 2}
+# Determine the total number (sum) of male and female flowers combined on each plant (i.e., total number of flowers, males + females).
+
+flowercounts = summarize(
+  group_by(flowercounts, plant),
+  sumF = sum(F),
+  sumM = sum(M),
+  sumTotal = sum(M) + sum(F)
+  )
+
+flowercounts = slice(flowercounts, 1:200) # summarize spits out an NA row at the end. This seems to get rid of it.
+
+tail(flowercounts)
+```
+
+``` {r question 3}
+# Join the total flower number count with the cucumberdamage dataframe
+
+combined = bind_cols(flowercounts, cucumberdamage)
+#combined$pollination <- as.factor(combined$pollination)
+#combined$herbivory <- as.factor(combined$herbivory)
+head(combined)
+```
+
+``` {r question 4}
+# Use a t-test to determine if the hand-pollination treatment affects flower number. In your annotation, explain how you interpret the result of the t-test (in your own words)
+
+t.test(combined$sumTotal ~ combined$pollination)
+
+# It looks like we can't reject the null hypothesis with 95% confidence (that there's no difference between pollination methods). So there isn't a statistical difference between the pollination methods.
+```
+
+``` {r question 5}
+# Make a figure in ggplot depicting flower number and pollination treatment
+
+ggplot(combined,
+       aes(
+         x=pollination,
+         y=sumTotal
+       )) +
+  geom_boxplot(
+    outlier.alpha = 0, # don't show my outliers, they'll show up in the geom_jitter plot
+    notch = TRUE, # add a notch
+    notchwidth = 0.8, # set notch width (default is 0.5)
+    na.rm = TRUE, # drop NA values so I don't get warnings
+  ) +
+  geom_jitter(
+    shape = 21,
+    size = 1,
+    position = position_jitter(0.05)
+  ) +
+  theme_bw() +
+  labs(
+    x = "Pollination Method",
+    y = "Total Number of Flowers",
+    title = "Flower Count by Pollination Method"
+  )
+```
+
+``` {r question 6}
+# On each plant, the lengths of 3 leaves were measured (leaf1length, leaf2length, leaf3length in the cucumberdamage dataframe). First, use dplyr to calculate mean leaf length of each plant. Then, test the hypothesis that hand-pollination decreases leaf size.
+
+# mutate to create a new column of mean leaf lengths
+combined = mutate(
+  combined, 
+  meanLeaf = (
+    leaf1length +  
+    leaf2length + 
+    leaf3length)
+  /3)
+
+t.test(combined$meanLeaf ~ combined$pollination)
+# It looks like we still can't reject the null hypothesis that pollination method has no effect on mean leaf length with at least 95% confidence.
+```
+
+``` {r question 7}
+# Make a ggplot illustrating the results of leaf length vs hand polliantion.
+
+ggplot(combined,
+       aes(
+         x=pollination,
+         y=meanLeaf
+       )) +
+  geom_boxplot(
+    outlier.alpha = 0, # don't show my outliers, they'll show up in the geom_jitter plot
+    notch = TRUE, # add a notch
+    notchwidth = 0.8, # set notch width (default is 0.5)
+    na.rm = TRUE, # drop NA values so I don't get warnings
+  ) +
+  geom_jitter(
+    shape = 21,
+    size = 1,
+    position = position_jitter(0.05)
+  ) +
+  theme_bw() +
+  labs(
+    x = "Pollination Method",
+    y = "Mean Leaf Length",
+    title = "Mean Leaf Length by Pollination Method"
+  )
+```
+
+``` {r Hajduk dataset portion}
+
+
+
+
+
+
+
+
+
+
+```
