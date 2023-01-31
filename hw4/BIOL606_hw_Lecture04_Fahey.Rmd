@@ -10,8 +10,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(dplyr)
 library(ggplot2)
-library(lme4)
-library(stargazer)
+#library(lme4)
+#library(stargazer)
+library(ggfortify)
 ```
 
 ```{r question 1}
@@ -131,4 +132,197 @@ ggplot(combined,
     title = "Mean Leaf Length by Pollination Method"
   )
 ```
+
+# Beckerman ch 5
+``` {r get dataset ready}
+rm(list = ls())
+
+# import the data 
+lady <- read.csv("../Beckerman-datasets-master/ladybirds_morph_colour.csv")
+
+# Check it out 
+glimpse(lady)
+```
+
+```{r plotting}
+
+totals <- lady %>%
+  group_by(Habitat, morph_colour) %>%
+  summarise(total.number = sum(number))
+
+ggplot(
+  totals, 
+  aes(
+    x = Habitat, 
+    y = total.number, 
+    fill = morph_colour)) +
+geom_bar(
+  stat = 'identity', 
+  position = 'dodge'
+  )
+
+```
+
+```{r changing colors}
+
+ggplot(
+  totals, 
+  aes(
+    x = Habitat, 
+    y = total.number, 
+    fill = morph_colour
+    )) +
+  geom_bar(
+    stat =  'identity', 
+    position = 'dodge') +
+  scale_fill_manual(
+    values = c(black = "black", red = "red")
+    )
+```
+
+``` {r chi-squared test}
+
+lady.mat <- xtabs(number ~ Habitat + morph_colour, data = lady) 
+lady.mat
+
+chisq.test(lady.mat)
+```
+
+``` {r looking at chi-squared more}
+
+lady.chi <- chisq.test(lady.mat)
+names(lady.chi)
+```
+
+```{r load and plot ozone}
+ozone <- read.csv("../Beckerman-datasets-master/ozone.csv")
+
+glimpse(ozone)
+
+ggplot(
+  ozone, 
+  aes(x = Ozone)
+  ) +
+geom_histogram(
+  binwidth = 10
+  ) +
+facet_wrap(
+  ~ Garden.location, 
+  ncol = 1
+  ) +
+theme_bw()
+```
+
+```{r t-test}
+t.test(Ozone ~ Garden.location, data = ozone) 
+```
+
+```{r variance}
+var.test(Ozone ~ Garden.location, data = ozone) 
+```
+
+``` {r load and plot plant growth rate}
+plant_gr <- read.csv("../Beckerman-datasets-master/plant.growth.rate.csv")
+
+glimpse(plant_gr)
+
+ggplot(
+  plant_gr,
+  aes(
+    x = soil.moisture.content, 
+    y = plant.growth.rate)
+  ) +
+geom_point() +
+ylab(
+  "Plant Growth Rate (mm/week)"
+  ) +
+theme_bw()
+```
+
+```{r linear model plotting}
+# Fit a linear model, where we hypothesize that plant growth rate is a function of soil moisture content
+model_pgr <- lm(
+  plant.growth.rate ~ soil.moisture.content, 
+  data = plant_gr
+  )
+
+autoplot(model_pgr, smooth.colour = NA)
+```
+
+```{r summary}
+anova(model_pgr)
+summary(model_pgr)
+```
+
+```{r adding regression lines to original plot}
+
+ggplot(
+  plant_gr, 
+  aes(
+    x = soil.moisture.content, 
+    y = plant.growth.rate)
+  ) +
+geom_point() +
+geom_smooth(
+  method = 'lm'
+  ) +
+ylab(
+  "Plant Growth Rate (mm/week)"
+  ) +
+theme_bw()
+
+```
+
+``` {r load and plot daphnia}
+
+daphnia <- read.csv("../Beckerman-datasets-master/Daphniagrowth.csv")
+
+glimpse(daphnia)
+
+ggplot(
+  daphnia, 
+  aes(
+    x = parasite, 
+    y = growth.rate)
+  ) +
+geom_boxplot() +
+theme_bw()
+```
+
+```{r cordinate flipping}
+
+ggplot(
+  daphnia, 
+  aes(
+    x = parasite, 
+    y = growth.rate)
+  ) +
+geom_boxplot() +
+theme_bw() +
+coord_flip()
+
+```
+
+```{r plot the model}
+model_grow <- lm(growth.rate ~ parasite, data = daphnia) 
+autoplot(model_grow, smooth.colour = NA)
+```
+
+```{r annova and summary}
+anova(model_grow)
+summary(model_grow)
+```
+
+```{r}
+sumDat<-daphnia %>%
+  group_by(parasite) %>%
+  summarise(meanGR = mean(growth.rate))
+```
+
+# Beckerman ch 6
+
+
+
+
+
 
