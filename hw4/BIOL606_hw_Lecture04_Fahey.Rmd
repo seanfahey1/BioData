@@ -207,14 +207,14 @@ geom_histogram(
   binwidth = 10
   ) +
 facet_wrap(
-  ~ Garden.location, 
+  ~ Garden.location, # different plots for location
   ncol = 1
   ) +
 theme_bw()
 ```
 
 ```{r t-test}
-t.test(Ozone ~ Garden.location, data = ozone) 
+t.test(Ozone ~ Garden.location, data = ozone) # y ~ x
 ```
 
 ```{r variance}
@@ -455,7 +455,7 @@ anova(limp.mod)
 expand.grid(FIRST = c("A", "B"), SECOND = c(1, 2))
 ```
 
-```{r uses predict }
+```{r predict}
 predict(limp.mod) # predict number of eggs using our linear model
 ```
 
@@ -478,9 +478,9 @@ new.y
 ```
 
 
-```{r}
-new.data <- data.frame(new.x, new.y)
-new.data <- rename(new.data, EGGS = fit) 
+```{r combine into DF}
+new.data <- data.frame(new.x, new.y) # combine test data and predictions into new dataset
+new.data <- rename(new.data, EGGS = fit) # rename columns
 new.data
 ```
 
@@ -531,4 +531,3 @@ scale_fill_manual(
 
 theme_bw()
 ```
-
