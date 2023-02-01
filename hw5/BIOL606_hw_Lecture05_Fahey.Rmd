@@ -1,0 +1,216 @@
+---
+title: "BIOL606_hw_Lecture05_Fahey"
+author: "Sean Fahey"
+date: "2023-02-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(ggplot2)
+library(ggfortify)
+```
+
+# Is total male flowers affected by number of leaves AND pollination treatment (in a single linear model)? 
+### hypothesis: No, total male flowers is positively correlated with the number of leaves (bigger plants have both more leaves and more flowers), but pollination method does not have any effect (because the flower has already grown once pollination happens).
+
+
+```{r get dataset ready}
+flowercounts <- read.csv("lecture3_flowercounts.csv")
+flowercounts$plant <- as.factor(flowercounts$plant)
+
+cucumberdamage <- read.csv("lecture3_cucumberdamage.csv")
+cucumberdamage$plant <- as.factor(cucumberdamage$plant)
+
+
+flowertotals = summarize(
+  group_by(flowercounts, plant),
+  sumF = sum(F),
+  sumM = sum(M),
+  sumTotal = sum(M) + sum(F)
+  )
+
+# flowertotals = slice(flowertotals, 1:200) # summarize spits out an NA row at the end. This seems to get rid of it.
+
+cfdata = left_join(cucumberdamage, flowertotals, by="plant")
+
+summary(cfdata)
+glimpse(cfdata)
+
+```
+
+```{r question 2}
+# Visualize the data in a plot
+
+male_plot = ggplot(
+  cfdata,
+  aes(
+    x=num_leaves,
+    y=sumM,
+  )) +
+  geom_point(
+    shape=20,
+    size=1,
+    na.rm=TRUE
+  ) +
+  theme_bw() +
+  geom_smooth(
+  formula = y~x,
+  method = 'lm',
+  se=TRUE, # show shaded area for standard error of line
+  na.rm = TRUE
+  )
+
+male_plot
+
+```
+
+
+```{r question 3}
+# Build a model using lm()
+
+?lm
+
+model1 = lm( # set up a linear model
+  sumM ~ num_leaves + pollination, # y~x, independ. v. depend. --or-- response v. feature
+  data = cfdata
+  )
+
+```
+
+
+```{r question 4}
+# Assess the model
+
+#autoplot(
+#  model1, 
+#  smooth.colour = 2)
+# residuals are how far off from regression line each data point was.
+# good test of homo/heteroscadicity. Do we have more/less variance as we approach one side? approach ends? etc.
+plot(model1)
+
+# Residuals show some non-flat pattern, but are overall okay. 
+# QQ plot shows
+# Scale location plot (square root of residuals) shows
+# Residuals v. Leverage plot shows
+
+```
+
+
+```{r question 5}
+# Interpret the model, particularly in light of your hypothesis
+
+anova(model1) # analysis of variance
+
+```
+
+```{r  question 5 cont.}
+
+summary(model1)
+
+# There's a positive relationship between each dependent variable (number of leaves and pollination), and the total number of male flowers. The relationship between number of leaves and number of male flowers is statistically significant (Df: 1, 163 F: 85.68 p < 2e-16). 
+
+# The relationship between pollination method and number of male flowers is not statistically significant (Df 1, 163 F: 0.6075 p: 0.437)
+
+# My hypothesis is correct. Number of leaves has a positive correlation with the number of male flowers that is statistically significant, but the pollination method does not have a statistically significant correlation with the number of male flowers.
+```
+
+
+```{r question 6}
+# Plot your results the way you would want it to look in a journal (or on grandma's refrigerator)
+
+r = residuals.lm(model1)
+f = fitted.values(model1)
+
+data = list(r, f)
+
+dataFrame <- as.data.frame(data)
+
+ggplot(
+  dataFrame,
+  aes(
+    x=f,
+    y=r
+  )) +
+  geom_point(
+    shape=20,
+    size=1,
+  ) +
+  theme_minimal() +
+  geom_smooth(
+  se=FALSE,
+  color="red"
+  ) +
+  labs(
+    x = "Fitted Values",
+    y = "Residuals",
+    title = "Fitted v. Residuals | sumM ~ number of leaves + pollination method"
+  )
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
