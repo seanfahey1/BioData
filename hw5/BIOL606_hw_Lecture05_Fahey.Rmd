@@ -34,7 +34,7 @@ flowertotals = summarize(
 
 # flowertotals = slice(flowertotals, 1:200) # summarize spits out an NA row at the end. This seems to get rid of it.
 
-cfdata = left_join(cucumberdamage, flowertotals, by="plant")
+cfdata = left_join(cucumberdamage, flowertotals, by="plant") # joining works like sql
 
 summary(cfdata)
 glimpse(cfdata)
@@ -49,19 +49,19 @@ male_plot = ggplot(
   aes(
     x=num_leaves,
     y=sumM,
-    color=pollination
+    color=pollination # color by pollination feature
   )) +
   geom_point(
     shape=20,
     size=1,
-    na.rm=TRUE
+    na.rm=TRUE # put this in geom_point AND geom_smooth to prevent warnings. No change to plot.
   ) +
   theme_bw() +
   geom_smooth(
-  formula = y~x,
-  method = 'lm',
-  se=FALSE, # show shaded area for standard error of line
-  na.rm = TRUE
+    formula = y~x,
+    method = 'lm',
+    se=FALSE, # hide shaded area for standard error of line
+    na.rm = TRUE
   )
 
 male_plot
@@ -88,7 +88,7 @@ model1 = lm( # set up a linear model
 #  smooth.colour = 2)
 # residuals are how far off from regression line each data point was.
 # good test of homo/heteroscadicity. Do we have more/less variance as we approach one side? approach ends? etc.
-plot(model1)
+plot(model1) # this seems prettier than autoplot
 
 # Residuals show some non-flat pattern, but are overall okay. 
 # QQ plot looks good. No huge deviations in standardized residuals as the values get further from the mean.
@@ -120,7 +120,6 @@ summary(model1)
 ```{r question 6}
 # Plot your results the way you would want it to look in a journal (or on grandma's refrigerator)
 
-
 ggplot(
   cfdata,
   aes(
@@ -143,13 +142,13 @@ ggplot(
     x = "Number of Leaves",
     y = "Number of Male Flowers",
     title = "Number of Leaves v. Number of Male Flowers",
-    subtitle = "By Pollination Method"
+    subtitle = "By Pollination Method",
   )
 
 ```
 
 
-# Beckerman 
+# Beckerman ch 7
 
 ```{r load dataset}
 
