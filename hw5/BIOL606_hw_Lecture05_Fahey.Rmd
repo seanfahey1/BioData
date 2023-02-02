@@ -49,6 +49,7 @@ male_plot = ggplot(
   aes(
     x=num_leaves,
     y=sumM,
+    color=pollination
   )) +
   geom_point(
     shape=20,
@@ -59,7 +60,7 @@ male_plot = ggplot(
   geom_smooth(
   formula = y~x,
   method = 'lm',
-  se=TRUE, # show shaded area for standard error of line
+  se=FALSE, # show shaded area for standard error of line
   na.rm = TRUE
   )
 
@@ -70,8 +71,6 @@ male_plot
 
 ```{r question 3}
 # Build a model using lm()
-
-?lm
 
 model1 = lm( # set up a linear model
   sumM ~ num_leaves + pollination, # y~x, independ. v. depend. --or-- response v. feature
@@ -92,9 +91,9 @@ model1 = lm( # set up a linear model
 plot(model1)
 
 # Residuals show some non-flat pattern, but are overall okay. 
-# QQ plot shows
-# Scale location plot (square root of residuals) shows
-# Residuals v. Leverage plot shows
+# QQ plot looks good. No huge deviations in standardized residuals as the values get further from the mean.
+# Scale location plot (square root of residuals) shows no crazy data points. Similar to residual plot
+# Residuals v. Leverage plot shows a couple data points with higher leverage, but nothing too wild. Overall it looks pretty good.
 
 ```
 
@@ -121,18 +120,13 @@ summary(model1)
 ```{r question 6}
 # Plot your results the way you would want it to look in a journal (or on grandma's refrigerator)
 
-r = residuals.lm(model1)
-f = fitted.values(model1)
-
-data = list(r, f)
-
-dataFrame <- as.data.frame(data)
 
 ggplot(
-  dataFrame,
+  cfdata,
   aes(
-    x=f,
-    y=r
+    x=num_leaves,
+    y=sumM,
+    color=pollination
   )) +
   geom_point(
     shape=20,
@@ -140,74 +134,140 @@ ggplot(
   ) +
   theme_minimal() +
   geom_smooth(
-  se=FALSE,
-  color="red"
+    method='lm',
+    se=FALSE,
+    linewidth = 0.5,
+    linetype = 2
   ) +
   labs(
-    x = "Fitted Values",
-    y = "Residuals",
-    title = "Fitted v. Residuals | sumM ~ number of leaves + pollination method"
+    x = "Number of Leaves",
+    y = "Number of Male Flowers",
+    title = "Number of Leaves v. Number of Male Flowers",
+    subtitle = "By Pollination Method"
   )
 
 ```
 
 
-```{r}
+# Beckerman 
+
+```{r load dataset}
+
+soay <- read.csv("../Beckerman-datasets-master/soaysheepfitness.csv")
+glimpse(soay)
 
 ```
 
 
-```{r}
+```{r plot it}
+
+ggplot(
+  soay, 
+  aes(
+    x = body.size, 
+    y = fitness)) +
+geom_point() +
+geom_smooth(
+  method = "lm", 
+  se = FALSE) +
+geom_smooth(
+  span = 1, 
+  colour = "red", 
+  se = FALSE) +
+xlab("Body mass (kg)") + 
+ylab("Lifetime fitness")
 
 ```
 
 
-```{r}
+```{r build linear model}
+
+soay.glm = glm(
+  fitness ~ body.size, 
+  data = soay, 
+  family = poisson(link = log)) 
+
+autoplot(soay.glm)
+```
+
+
+```{r annova}
+
+anova(soay.glm, test = "Chisq")
 
 ```
 
 
-```{r}
+```{r summarize linear model}
+
+summary(soay.glm)
 
 ```
 
 
-```{r}
+```{r predict using fake data}
 
+min.size = min(soay$body.size) # get the lowest and highest body sizes
+max.size = max(soay$body.size)
+
+new.x = expand.grid( # get 1000 data points evenly distributed from lowest to highest body size
+  body.size = seq(
+    min.size, 
+    max.size, 
+    length=1000
+    ))
+
+
+new.y = predict( # use the glm to predict from our fake data
+  soay.glm, 
+  newdata = new.x, 
+  se.fit = TRUE)
+
+new.y = data.frame(new.y)
+
+head(new.y)
+head(new.x)
 ```
 
 
-```{r}
+```{r combine data, adjust by the confidence interval, and plot results}
+new.df = data.frame(new.x, new.y)
 
+new.df = mutate(
+  new.df,
+  fitness = exp(fit),
+  lwr = exp(fit - 1.96 * se.fit),
+  upr = exp(fit + 1.96 * se.fit)
+  )
+
+summary(new.df)
+
+
+plot = ggplot(
+  soay, 
+  aes(
+    x = body.size, 
+    y = fitness
+    )) +
+geom_point( size = 1.5,
+  alpha = 0.8,
+  shape = 1
+  ) +
+geom_smooth( # add the fits and CIs
+  data = new.df, 
+  aes(
+    ymin = lwr, 
+    ymax = upr), 
+  stat = 'identity',
+  se=FALSE,
+  color="firebrick",
+  linewidth = 0.5,
+  linetype = 5
+  ) +
+theme_bw()
+
+plot
 ```
-
-
-```{r}
-
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
