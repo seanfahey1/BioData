@@ -1,0 +1,121 @@
+---
+title: "BIOL606_hw_Lecture06_Fahey"
+author: "Sean Fahey"
+date: "2023-02-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(ggfortify)
+```
+
+
+```{r importing data}
+
+ccdmg <- read.csv("lecture5_cucumberdamage.csv")
+ccdmg$pollination <- as.factor(ccdmg$pollination)
+ccdmg$herbivory <- as.factor(ccdmg$herbivory)
+
+summary(ccdmg)
+head(ccdmg)
+glimpse(cfdata)
+
+```
+
+
+```{r question 1}
+# Answer the question:  Is the total number of fruits produced affected by herbivore damage to leaves (i.e., "leafdamage") and hand-pollination treatments? (Start with a general linear model and proceed from there)
+
+leafmodel = lm(
+  totalfruits ~ leafdamage * pollination,
+  data = ccdmg
+)
+
+autoplot(leafmodel)
+```
+
+
+```{r question 2}
+# Make a figure of the results, with separate lines for the two pollination treatments. 
+
+ccplot = ggplot(
+  ccdmg,
+  aes(
+    x = leafdamage,
+    y = totalfruits,
+    color = pollination
+  )
+) + 
+  geom_point(
+    shape = 20,
+    size = 2
+  ) + 
+  theme_minimal() +
+  geom_smooth(
+    formula = y~x, # this is the default, but adding it suppresses a warning
+    method = 'lm',
+    se=FALSE, # get rid of the shaded confidence intervals
+    linewidth = 0.5,
+    linetype = 2
+  ) +
+  labs(
+    x = "Herbavore Leaf Damage",
+    y = "Total Number of Fruits",
+    title = "Number of Fruits v. Herbavore Damage",
+    subtitle = "For 2 Pollination Methods",
+  )
+
+
+ccplot
+```
+
+
+```{r question 3}
+# Repeat steps 1 and 2, but instead of "leafdamage," use the categorical treatment variable "herbivory". Think about what the figure will look like for this scenario.
+
+herbmodel = lm(
+  totalfruits ~ herbivory * pollination,
+  data = ccdmg
+)
+
+autoplot(herbmodel)
+```
+
+
+
+```{r question 3 cont.}
+
+herbplot = ggplot(
+  ccdmg,
+  aes(
+    x = herbivory,
+    y = totalfruits,
+    color = pollination
+  )
+) + 
+  geom_boxplot(
+#    shape = 20,
+#    size = 2
+  ) + 
+  theme_minimal() +
+  labs(
+    x = "Herbivory",
+    y = "Total Number of Fruits",
+    title = "Number of Fruits for each Herbivory",
+    subtitle = "For 2 Pollination Methods",
+  )
+
+
+herbplot
+
+```
+
+
+
+
+
+
+
