@@ -12,10 +12,66 @@ library(ggplot2)
 library(ggfortify)
 ```
 
+## In-Class stuff
+```{r}
+soay = read.csv("SoaySheepFitness.csv")
 
+soaymodel = lm(
+  fitness ~ body.size,
+  data = soay
+)
+autoplot(soaymodel) # first we plot the residuals, etc.
+anova(soaymodel) # then we do an anova to check how good our model is
+print("--------------------------------------------------------")
+summary(soaymodel) # then we print the summary to check coefficients (slope and intercept) and significance for each variable
+```
+
+```{r}
+# glm can be better for count data (like population numbers, etc.)
+soayglm = glm(
+  fitness ~ body.size,
+  data = soay,
+  family = 'poisson' #alternatively I can use a quasipoisson, then change anova test method from Chi to F. This is used when residual deviance is way higher than the number of degrees of freedom. Not relevant for this data.
+)
+autoplot(soayglm)
+anova(soayglm, test="Chi") # specify the test for glm
+print("--------------------------------------------------------")
+summary(soayglm)
+```
+```{r}
+ggplot(
+  soay,
+  aes(
+    x = body.size,
+    y = fitness
+  )) + 
+  
+  geom_point(
+    size=2,
+    shape=20
+  ) +
+  
+  geom_smooth(
+    formula = "y~x",
+    method='lm',
+    size = 1,
+    linetype = 2,
+    se = FALSE
+  ) +
+  
+  theme_minimal() +
+  labs(
+    x = "Body Size",
+    y = "Fitness"
+  )
+```
+
+
+## Homework
 ```{r importing data}
 
 ccdmg <- read.csv("lecture5_cucumberdamage.csv")
+# factorize strings (categoricals)
 ccdmg$pollination <- as.factor(ccdmg$pollination)
 ccdmg$herbivory <- as.factor(ccdmg$herbivory)
 
@@ -35,6 +91,11 @@ leafmodel = lm(
 )
 
 autoplot(leafmodel)
+anova(leafmodel)
+summary(leafmodel)
+
+# Residuals for the fitted values are heteroscedastic and don't look super great.
+# leaf damage has a statistically significant (Df: 196, F: 31.7631, p-value: 6e-8) slightly negative effect on the number of fruits (slope: -0.18345). Pollination method doesn't seem to matter.
 ```
 
 
@@ -49,10 +110,12 @@ ccplot = ggplot(
     color = pollination
   )
 ) + 
+  
   geom_point(
-    shape = 20,
-    size = 2
+    shape = 1,
+    size = 1
   ) + 
+  
   theme_minimal() +
   geom_smooth(
     formula = y~x, # this is the default, but adding it suppresses a warning
@@ -61,6 +124,7 @@ ccplot = ggplot(
     linewidth = 0.5,
     linetype = 2
   ) +
+  
   labs(
     x = "Herbavore Leaf Damage",
     y = "Total Number of Fruits",
@@ -68,13 +132,17 @@ ccplot = ggplot(
     subtitle = "For 2 Pollination Methods",
   )
 
-
 ccplot
+
+# Herbivore leaf damage has a negative effect on total number of fruits, regardless of pollination.
 ```
 
 
 ```{r question 3}
 # Repeat steps 1 and 2, but instead of "leafdamage," use the categorical treatment variable "herbivory". Think about what the figure will look like for this scenario.
+
+# Herbavory is a categorical, so the summary figure will need to be a boxplot. Also the residuals plot will have specific values for x.
+
 
 herbmodel = lm(
   totalfruits ~ herbivory * pollination,
@@ -82,8 +150,9 @@ herbmodel = lm(
 )
 
 autoplot(herbmodel)
+anova(herbmodel)
+summary(herbmodel)
 ```
-
 
 
 ```{r question 3 cont.}
@@ -96,10 +165,14 @@ herbplot = ggplot(
     color = pollination
   )
 ) + 
+  
   geom_boxplot(
-#    shape = 20,
-#    size = 2
+    outlier.colour = "Black",
+    outlier.shape = 4,
+    show.legend = TRUE,
+    fill = "lightgrey"
   ) + 
+  
   theme_minimal() +
   labs(
     x = "Herbivory",
@@ -108,10 +181,24 @@ herbplot = ggplot(
     subtitle = "For 2 Pollination Methods",
   )
 
-
 herbplot
 
+# looks like herbivory "H" is different than the others. 
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
