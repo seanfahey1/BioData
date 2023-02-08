@@ -1,0 +1,131 @@
+---
+title: "BIOL606_hw_Lecture07_Fahey"
+author: "Sean Fahey"
+date: "2023-02-08"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(ggplot2)
+library(ggfortify)
+library(car)
+
+```
+
+
+```{r question 1}
+cc <- read.csv("lecture5_NEWcucumberdamage.csv")
+cc$pollination <- as.factor(cc$pollination)
+cc$herbivory <- as.factor(cc$herbivory)
+
+head(cc)
+```
+
+```{r question 2}
+table(cc$pollination, cc$herbivory)
+# looks like the data is balanced for pollination and herbivory
+
+ggplot(
+  cc,
+  aes(
+    y = leafdamage,
+    x = pollination # separate groups for each pollination treatment
+  )
+) +
+  theme_minimal() + 
+  geom_boxplot() +
+  geom_jitter(
+    width=0.05,
+    height=0,
+    alpha=0.5,
+    shape=4,
+    size=1,
+    color="Blue"
+  )
+
+ggplot(
+  cc,
+  aes(
+    x = leafdamage,
+    color = pollination # separate groups for each pollination treatment
+  )
+) +
+  geom_histogram() +
+  theme_minimal()
+
+# looks like leaf damage and pollination are pretty much balanced. 
+```
+
+
+```{r question 3}
+
+cc_ph = lm(
+  totalfruits ~ pollination * herbivory,
+  data = cc,
+  family = 'quasipoisson' 
+)
+
+autoplot(cc_ph)
+```
+
+
+```{r question 3 cont.}
+writeLines("ANOVA\n")
+anova(cc_ph, test="F")
+
+writeLines("\n\n\nSUMMARY")
+summary(cc_ph)
+
+# The residual plots look okay (no crazy spread) so we can look deeper at the model without using a glm. Running an anova shows herbivory has a statistically significant effect on number of fruits (DF: 3, F: 11.3043, p:7.683e-7), but pollination does not (DF: 3, F: 0.0018, p: 0.9658).
+# Looking at the summary shows statistically significant effects on fruit production from all herbivories, but no effect from pollination. Also the interactions between our independant variables show no effect on fruit production (DF: 3, F: 0.6880, p: 0.5605), so pollination method used does not matter when studying herbivory effects. 
+```
+
+```{r question 3 cont.}
+
+ggplot(
+  cc,
+  aes(
+    color = pollination,
+    y = totalfruits,
+    x = herbivory
+  )
+) + 
+  geom_boxplot() + 
+  theme_minimal() +
+  labs(
+    title = "Effect of Herbivory and Pollination on Total Number of Fruits Produced",
+    x = "Herbivory",
+    y = "Total Number of Fruits"
+  )
+
+# this plot supports the results from the summary above. Herbivory seems to matter, but within each herbivory the pollination method does not make a substantial difference.
+```
+
+
+```{r question 4}
+# switch to sums method
+options(contrasts  = c("contr.sum","contr.poly"))
+
+# setup model
+cc_ph3 = lm(
+  totalfruits ~ pollination * herbivory,
+  data = cc
+)
+
+# anova w/ type=3 using the car package
+writeLines("ANOVA\n")
+Anova(cc_ph3, type=3)                          
+
+# set back to defaults
+options(contrasts  = c("contr.treatment","contr.poly"))
+
+writeLines("\n\n\nSUMMARY")
+summary(cc_ph3)
+
+
+# The results change slightly (for example: herbivory p value goes from 7.683e-7 to 7.862e-7), but this does not change our conclusions.
+```
+

@@ -66,6 +66,41 @@ ggplot(
   )
 ```
 
+```{r}
+cc <- read.csv("lecture5_cucumberdamage.csv")
+cc$pollination <- as.factor(cc$pollination)
+cc$herbivory <- as.factor(cc$herbivory)
+
+icuke1 = glm(totalfruits ~ leafdamage * pollination, data=cc, family=quasipoisson)
+anova(icuke1, test="F")
+
+writeLines("\n________________________________________________________________\n")
+
+icuke2 = glm(totalfruits ~  pollination * leafdamage, data=cc, family=quasipoisson)
+anova(icuke2, test="F")
+```
+
+### there's differences!
+when there's interactions between the IVs we want to run code he provided to switch to a Type III calculation method
+if interaction btwn IVs is significant, main effects w/in that interaction probably aren't meaningful.
+
+balanced data - type I is fine
+unbalanced, no interactions - type II
+unbalanced, yes interactions - type III
+
+### How to switch to type3
+
+options(contrasts  = c("contr.sum","contr.poly"))         - switch to sums method
+model = lm(...)                                           - setup model
+anova(model, type=3)                                      - anova w/ type=3
+options(contrasts  = c("contr.treatment","contr.poly"))   - set the contrasts back to defaults so it doesn't break anything else
+
+
+
+
+
+
+
 
 ## Homework
 ```{r importing data}
@@ -107,7 +142,7 @@ ccplot = ggplot(
   aes(
     x = leafdamage,
     y = totalfruits,
-    color = pollination
+    color = pollination # separate groups for each pollination treatment
   )
 ) + 
   
@@ -117,7 +152,7 @@ ccplot = ggplot(
   ) + 
   
   theme_minimal() +
-  geom_smooth(
+  geom_smooth( # add a straight line to the plot
     formula = y~x, # this is the default, but adding it suppresses a warning
     method = 'lm',
     se=FALSE, # get rid of the shaded confidence intervals
@@ -144,14 +179,18 @@ ccplot
 # Herbavory is a categorical, so the summary figure will need to be a boxplot. Also the residuals plot will have specific values for x.
 
 
-herbmodel = lm(
+herbmodel = glm( # I'm doing a glm here just so I have one of each type really. The lm looked fine too.
   totalfruits ~ herbivory * pollination,
-  data = ccdmg
+  data = ccdmg,
+  family = "poisson"
 )
 
 autoplot(herbmodel)
-anova(herbmodel)
+anova(herbmodel, test="Chi")
 summary(herbmodel)
+
+# looks like herbivory has a statistically significant positive effect on number of fruits ( Df: 196, Deviance residual: 200.765, Chi-square: <2e-16) and pollination method has no effect (DF: 195, Deviance residual: 0.024, Chi-square: 0.87678)
+
 ```
 
 
