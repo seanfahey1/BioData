@@ -93,7 +93,7 @@ ggplot(
     x = herbivory
   )
 ) + 
-  geom_boxplot() + 
+  geom_boxplot(na.rm = TRUE) + 
   theme_minimal() +
   labs(
     title = "Effect of Herbivory and Pollination on Total Number of Fruits Produced",
@@ -126,6 +126,6 @@ writeLines("\n\n\nSUMMARY")
 summary(cc_ph3)
 
 
-# The results change slightly (for example: herbivory p value goes from 7.683e-7 to 7.862e-7), but this does not change our conclusions.
+# The anova results change slightly (for example: herbivory p value goes from 7.683e-7 to 7.862e-7), but this does not change our conclusions from the anova. However, the summary of the model shows that only one of the herbivories has a significant effect, while the others did not. This makes sense when compared to the boxplot above. Also categorical variables were renamed which isn't super helpful.
 ```
 
