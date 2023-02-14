@@ -1,0 +1,169 @@
+---
+title: "Project1"
+author: "Sean Fahey"
+date: "2023-02-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(ggplot2)
+library(ggfortify)
+library(plotly)
+
+pdata <- read.csv("pcosdata.csv")
+
+```
+
+# Background
+Polycystic ovary syndrome (PCOS) is a complex condition characterized by elevated androgen levels, menstrual irregularities, and/or small cysts on one or both ovaries.
+
+The disorder can be morphological (polycystic ovaries) or predominantly biochemical (hyperandrogenemia). 
+
+Hyperandrogenism, a clinical hallmark of PCOS, can cause inhibition of follicular development, microcysts in the ovaries, anovulation, and menstrual changes.
+
+```{r inspect dataset}
+pdata$Oligomenorrhea <- as.factor(pdata$Oligomenorrhea)
+pdata$Polycystic.Ovarian.Morphology <- as.factor(pdata$Polycystic.Ovarian.Morphology)
+pdata$Hyperandrogenism <- as.factor(pdata$Hyperandrogenism)
+pdata$Category <- as.factor(pdata$Category)
+
+pdata <- mutate(pdata, Weight.Category = ifelse((BMI > 25), "Overweight", "Healthy/Low"))
+pdata$Weight.Category <- as.factor(pdata$Weight.Category)
+
+head(pdata)
+names(pdata) #verify all variables are present
+
+```
+# Hypothesis
+Increasing testosterone and age are more likely to result in an elevated BMI. 
+
+```{r initial plots to explore dataset}
+ggplot(
+  pdata,
+  aes(
+    x=Testosterone.ng.mL,
+    y=BMI
+    )
+  ) + 
+  geom_point(
+    size=1) + 
+  theme_minimal() +
+  geom_smooth(
+    formula = 'y ~ x',
+    method = 'lm',
+    se=FALSE) +
+  labs(
+    x="Testosterone (ng/mL)",
+    y="BMI",
+    title="Testosterone Levels v. BMI"
+  )
+ggsave("Testosterone-v-BMI.png", height=4.5, width = 4.5, units = "in")
+
+
+ggplot(
+  pdata,
+  aes(
+    x=Age,
+    y=BMI,
+    )
+  ) + 
+  geom_point(
+    size=1) + 
+  theme_minimal() +
+  geom_smooth(
+    formula = 'y ~ x',
+    method = 'lm',
+    se=FALSE) +
+  labs(
+    x="Age",
+    y="BMI",
+    title="Participant Age v. BMI"
+  )
+ggsave("Age-v-BMI.png", height=4.5, width = 4.5, units = "in")
+
+
+ggplot(
+  pdata,
+  aes(
+    x=Testosterone.ng.mL,
+    y=BMI,
+    color=Age
+    )
+  ) + 
+  scale_colour_gradient(
+  low = "red",
+  high = "green",
+  space = "Lab",
+  na.value = "grey50",
+  guide = "colourbar",
+  aesthetics = "colour"
+  ) +
+  geom_point(
+    size=1,
+  ) + 
+  theme_gray() +
+  geom_smooth(
+    formula = 'y ~ x',
+    method = 'lm',
+    se=FALSE) +
+  labs(
+    x="Testosterone (ng/mL)",
+    y="BMI",
+    title="Testosterone Levels v. BMI",
+    subtitle="colored by age"
+  )
+ggsave("Testosterone+Age-v-BMI.png", height=4.5, width = 6, units = "in")
+
+```
+
+There is a slight positive correlation between Age/BMI and between Testosterone/BMI. However, the combination of Age and Testosterone don't seem to have a clear interaction.
+
+```{r setting up linear model}
+m1 = glm(BMI ~ Testosterone.ng.mL + Age, data=pdata)
+```
+
+```{r inspecting lienar model}
+summary(m1)
+anova(m1)
+autoplot(m1)
+
+```
+
+While there is a statistically significant correlation between both Testosterone (t-val: 2.442, Df: 174, p-val: 0.01562), and Age (t-val: 3.240, Df: 174, p-val:0.00144), the residual deviance is much higher than the number of degrees of freedom. To correct for this, we will run a poisson model instead.
+
+```{r setting up possion GLM model, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+m2 = glm(BMI ~ Testosterone.ng.mL + Age, data=pdata, family="poisson")
+```
+
+```{r inspecting possion GLM model}
+summary(m2)
+anova(m2)
+autoplot(m2)
+```
+
+There is a significant positive correlation between both Testosterone and BMI (z-val: 2.637, Df: 174, p-val: 0.008374) and between Age and BMI (z-val: 3.497, Df: 174, p-val: 0.000471). Also the residual deviance is much lower than the initial model, so the change improved our analysis.
+
+# Final plot
+
+```{r final figure supporting the GLM model}
+fig <- plot_ly(
+  pdata, 
+  x = ~Age, 
+  z = ~BMI, 
+  y = ~Testosterone.ng.mL, 
+  color = ~BMI,
+  marker = list(
+    size = 5,
+    line = list(
+      color = 'black',
+      width = 2
+    )))
+fig
+
+```
+
