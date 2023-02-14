@@ -64,8 +64,7 @@ ggplot(
 
 cc_ph = lm(
   totalfruits ~ pollination * herbivory,
-  data = cc,
-  family = 'quasipoisson' 
+  data = cc
 )
 
 autoplot(cc_ph)
@@ -117,7 +116,7 @@ cc_ph3 = lm(
 
 # anova w/ type=3 using the car package
 writeLines("ANOVA\n")
-Anova(cc_ph3, type=3)                          
+Anova(cc_ph3, type=3)
 
 # set back to defaults
 options(contrasts  = c("contr.treatment","contr.poly"))
