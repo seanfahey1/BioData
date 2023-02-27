@@ -35,7 +35,8 @@ pdata$Weight.Category <- as.factor(pdata$Weight.Category)
 
 head(pdata)
 names(pdata) #verify all variables are present
-
+summary(pdata$BMI)
+hist(pdata$BMI, breaks=15)
 ```
 # Hypothesis
 Increasing testosterone and age are more likely to result in an elevated BMI. 
@@ -127,7 +128,7 @@ m1 = glm(BMI ~ Testosterone.ng.mL + Age, data=pdata)
 
 ```{r inspecting lienar model}
 summary(m1)
-anova(m1)
+anova(m1, test="F")
 autoplot(m1)
 
 ```
@@ -142,7 +143,7 @@ m2 = glm(BMI ~ Testosterone.ng.mL + Age, data=pdata, family="poisson")
 
 ```{r inspecting possion GLM model}
 summary(m2)
-anova(m2)
+anova(m2, test="F")
 autoplot(m2)
 ```
 
@@ -165,5 +166,6 @@ fig <- plot_ly(
     )))
 fig
 
+htmlwidgets::saveWidget(as_widget(fig), "3D-plot.html")
 ```
 
