@@ -1,0 +1,260 @@
+---
+title: "Untitled"
+author: "Sean Fahey"
+date: "2023-03-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(lme4)
+library(nlme)
+
+```
+
+
+```{r import nesteddata dataset}
+nesteddata = read.csv("soil_herbivory_nested.csv", header=TRUE)
+nesteddata$herbivory = as.factor(nesteddata$herbivory)
+nesteddata$plot = as.factor(nesteddata$plot)
+nesteddata$soil = as.factor(nesteddata$soil)
+nesteddata$subplot = as.factor(nesteddata$subplot)
+
+str(nesteddata)
+head(nesteddata)
+```
+
+
+
+```{r linear model}
+# These are equivalent
+soilm1 = lme(biomass ~ soil * herbivory, random = ~1|plot, data=nesteddata, method="ML")
+soilm2 = lme(biomass ~ soil * herbivory, random = ~1|plot/subplot, data=nesteddata, method="ML")
+
+# using type 1 because design is balanced
+anova(soilm1)
+anova(soilm2)
+summary(soilm1)
+summary(soilm2)
+
+# AIC/BIC look a little different. But anova results are identical.
+# soil has 2, 6 DF. Low DF means
+```
+
+
+
+```{r alternative lme method with lme4 package}
+soilm3 = lmer(
+  biomass ~ soil * herbivory + (1|plot/herbivory), 
+  data=nesteddata, 
+  REML=F,
+  )
+summary(soilm3)
+
+```
+
+
+
+```{r import }
+exdata <- read.csv("exotic_removal_data.csv", header=T, na.strings=".") 
+exdata$plot <- as.factor(exdata$plot)
+exdata
+
+```
+
+
+
+```{r}
+exmodel1 = lme(
+  N_ppm ~ veg * treatment, 
+  random = ~1|plot, 
+  method="ML", 
+  data=exdata, 
+  na.action=na.omit,
+  )
+
+anova(exmodel1)
+
+```
+
+
+
+```{r}
+
+
+
+```
+
+
+
+```{r}
+
+
+
+```
+
+
+
+```{r}
+
+
+
+```
+
+
+
+```{r}
+
+
+
+```
+
+
+
+```{r}
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
