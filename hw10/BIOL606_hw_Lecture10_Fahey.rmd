@@ -1,0 +1,317 @@
+---
+title: "BIOL606_hw_Lecture10_Fahey"
+author: "Sean Fahey"
+date: "2023-03-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(car)
+
+```
+
+
+```{r import data}
+
+lace = read.csv("lacebugs.csv", header=TRUE)
+lace$time = as.factor(lace$time)
+lace$treatment = as.factor(lace$treatment)
+lace$tree = as.factor(lace$tree)
+
+lace
+```
+
+
+```{r lme}
+
+# counting lace bugs present on trees (3 counts per tree separated by a couple months each) where trees were either covered in nets (blocking predators) or not. Trees have varying ammounts of light exposure.
+
+# 
+lacemod1 = lme(lacebugs_m2 ~ treatment * light + time, random = ~1 | tree, data=lace, na.action=na.omit)
+plot(lacemod1, main="initial plot")
+# very heteroscedastic!
+
+# log transform to fix
+lacemod2 = lme(log(lacebugs_m2+1) ~ treatment * light + time, random = ~1 | tree, data=lace, na.action=na.omit)
+plot(lacemod2, main="log transform to make residuals look a bit less heteroscedastic")
+
+# use ML method
+lacemod3 = lme(log(lacebugs_m2+1) ~ treatment * light + time, random = ~1 | tree, data=lace, na.action=na.omit, method="ML")
+plot(lacemod3, main="Method: ML")
+```
+
+
+```{r Anova}
+# use a type 3 because 1) interaction and 2) unbalanced
+options(contrasts = c("contr.sum", "contr.poly"))
+
+# rerun model with options set
+lacemod3 = lme(log(lacebugs_m2+1) ~ treatment * light + time, random = ~1 | tree, data=lace, na.action=na.omit, method="ML")
+
+Anova(lacemod3)
+summary(lacemod3)
+options(contrasts = c("contr.treatment", "contr.poly"))
+
+# some statisticians say you should be very conservative about p values in mixed models. So interaction isn't good enough here to be statistically significant.
+
+```
+
+
+```{r }
+
+
+
+```
+
+
+```{r }
+
+
+
+```
+
+
+```{r }
+
+
+
+```
+
+
+```{r }
+
+
+
+```
+
+
+```{r }
+
+
+
+```
+
+
+```{r }
+
+
+
+```
+
+
+```{r }
+
+
+
+```
+
+
+```{r }
+
+
+
+```
+
+
+```{r }
+
+
+
+```
+
+
+```{r }
+
+
+
+```
+
+
+```{r }
+
+
+
+```
+
+
+```{r }
+
+
+
+```
+
+
+```{r }
+
+
+
+```
+
+
+```{r }
+
+
+
+```
+
+
+```{r }
+
+
+
+```
+
+
+```{r }
+
+
+
+```
+
+
+```{r }
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
