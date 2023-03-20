@@ -1,0 +1,483 @@
+---
+title: "Project 2"
+author: "Sean Fahey, Andrew Levine, Ryin Rouzbehani"
+date: "2023-03-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(car)
+library(plotly)
+library(ggplot2)
+```
+
+
+```{r import data}
+pcom.data <- read.csv("PCOMdata.csv")
+
+# convert No to 0, yes to 1. 
+pcom.data$Oligo2 = ifelse(pcom.data$Oligomenorrhea == "No Oligo",0,1)
+pcom.data$Oligomenorrhea = as.factor(pcom.data$Oligomenorrhea)
+
+str(pcom.data)
+head(pcom.data)
+count(pcom.data, Oligomenorrhea) # data set is unbalanced
+
+```
+
+
+```{r histograms}
+#png(file="Age-histogram.png", width=400, height=250)
+ggplot(
+  pcom.data, 
+  aes(x = Age)
+  ) +
+  geom_histogram(
+    fill = "cornflowerblue", 
+    color = "black", 
+    bins=6
+    ) +
+  labs(title = "Age Distribution Histogram", x = "Age")
+#dev.off()
+
+#png(file="Testosterone-histogram.png", width=400, height=250)
+
+ggplot(
+  pcom.data, 
+  aes(x = Testosterone.ng.mL)
+  ) +
+  geom_histogram(
+    fill = "cornflowerblue", 
+    color = "black", 
+    bins=6
+    ) +
+  labs(title = "Testosterone Distribution Histogram", x = "Testosterone (ng/mL)")
+#dev.off()
+
+#png(file="BMI-histogram.png", width=400, height=250)
+ggplot(
+  pcom.data, 
+  aes(x = BMI)
+  ) +
+  geom_histogram(
+    fill = "cornflowerblue", 
+    color = "black", 
+    bins=6
+    ) +
+  labs(title = "BMI Distribution Histogram", x = "BMI")
+#dev.off()
+
+#png(file="Logit-BMI-histogram.png", width=400, height=250)
+ggplot(
+  pcom.data, 
+  aes(x = logit(BMI))
+  ) +
+  geom_histogram(
+    fill = "cornflowerblue", 
+    color = "black", 
+    bins=6
+    ) +
+  labs(title = "Logit BMI Distribution Histogram", x = "Logit BMI")
+#dev.off()
+
+#png(file="Oligomenorrhea-histogram.png", width=400, height=250)
+ggplot(
+  pcom.data, 
+  aes(x = Oligo2)
+  ) +
+  geom_histogram(
+    fill = "cornflowerblue", 
+    color = "black", 
+    bins=2
+    ) +
+  labs(title = "Oligomenorrhea Distribution Histogram", x = "Oligomenorrhea")
+#dev.off()
+
+```
+
+
+```{r set up type 3 linear model}
+
+# use a type 3 because data is unbalanced (more than 2x as many negative for oligo as positive for oligo)
+options(contrasts = c("contr.sum", "contr.poly"))
+
+# Not using the log transformed BMI because it doesn't seem to improve enough to justify it. Unfortunately we can't see if it helps residuals to transform because intrpreting residuals in a binomial glm is not really possible.
+
+model.1 = glm(
+  # assuming Testosterone, age, and BMI all interact.
+  Oligo2 ~ Age * BMI * Testosterone.ng.mL,
+  data=pcom.data,
+  family = "binomial"
+  )
+
+options(contrasts = c("contr.treatment", "contr.poly"))
+
+```
+
+Type 3 model selected because we are assuming interactions between all our IV, and because the Oligomenorrhea diagnosis is imbalanced in our dataset.
+
+
+```{r anova}
+Anova(
+  model.1, 
+  type=3, 
+  test.statistic="LR"
+  )
+
+```
+
+There are no significant interactions effects on Oligomenorrhea between age, BMI, testesterone, or all three. There are also no individual effects on Oligomenorrhea from any of the three independant variables.
+
+```{r summary}
+# Anova is so bad that were not even going to show these in the presentation. Nothing here is even close to significant.
+summary(model.1)
+```
+
+The summary results mirror the anova results in that they show nothing is close to statistically significant. None of the variables we tested seem to have a significant effect on the presence of Oligomenorrhea.
+
+
+```{r residuals}
+# cool pictures, impossible to interpret
+plot(model.1)
+
+```
+
+"Binomial data can't be over-dispersed (supposedly), so don't worry about it. Plotting binomial residuals makes cool pictures, but interpreting them is very hard."
+   - Dr. Nick Barber (fancy stats man)
+
+
+```{r graph Testosterone and Age with Oligo}
+
+#png(file="Testosterone-Age-Oligo-box.png", width=600, height=350)
+
+plot = ggplot(
+  pcom.data,
+  aes(
+    y = Oligo2,
+    x = Age,
+  )) +
+  geom_boxplot(
+    aes(
+      x=Age, 
+      group=Oligomenorrhea
+      ), 
+    orientation='y', 
+    outlier.alpha = 0,
+    varwidth = TRUE
+    ) +
+  geom_smooth(
+    aes(x=Age, y=Oligo2),
+    formula = 'y ~ x', 
+    method = "glm", 
+    method.args = list(family = "binomial"),
+    se = FALSE,
+    linetype = 2,
+    color=rgb(0, 0, 0, 0.5)
+    ) + 
+  geom_point(
+    position = position_jitter(seed=1, width=0, height=0.2),
+    shape = 19,
+    size = 2.3,
+    color="black"
+  ) +
+  geom_point(
+    position = position_jitter(seed=1, width=0, height=0.2),
+    size = 1.7, 
+    shape = 19,
+    aes(color=Testosterone.ng.mL)
+    ) +
+  theme_grey() +
+  scale_color_gradient2(
+    midpoint=mean(pcom.data$Testosterone.ng.mL), 
+    low="orangered", 
+    high="limegreen",
+    ) +
+  labs(
+    title = "Testosterone and Age",
+    subtitle = "by Oligomenorrhea Diagnosis",
+    x = "Age",
+    y = "Oligomenorrhea"
+  )
+
+plot
+#dev.off()
+
+```
+
+The regression shows a decreasing trend, but the box plots show that there is no significant difference in dispersion between the positive and negative patients. Visually, we can't confidently say there is a significant change in the slope.
+
+
+```{r graph Testosterone and Age with Oligo (no box)}
+
+#png(file="Testosterone-Age-Oligo-no-box.png", width=600, height=350)
+
+plot = ggplot(
+  pcom.data,
+  aes(
+    y = Oligo2,
+    x = Age,
+  )) +
+  geom_smooth(
+    aes(x=Age, y=Oligo2),
+    formula = 'y ~ x', 
+    method = "glm", 
+    method.args = list(family = "binomial"),
+    se = TRUE,
+    linetype = 2,
+    color=rgb(0, 0, 0, 0.5)
+    ) + 
+  geom_point(
+    shape = 19,
+    size = 2.3,
+    color="black"
+  ) +
+  geom_point(
+    size = 1.7, 
+    shape = 19,
+    aes(color=Testosterone.ng.mL)
+    ) +
+  theme_grey() +
+  scale_color_gradient2(
+    midpoint=mean(pcom.data$Testosterone.ng.mL), 
+    low="orangered", 
+    high="limegreen",
+    ) +
+  labs(
+    title = "Testosterone and Age",
+    subtitle = "by Oligomenorrhea Diagnosis",
+    x = "Age",
+    y = "Oligomenorrhea"
+  )
+
+plot
+
+#dev.off()
+
+```
+
+This is the same plot as above, but removing the boxplots to show the line better.
+
+
+```{r graph Age BMI scatter}
+#png(file="BMI-Age-Oligo-scatter.png", width=600, height=350)
+
+plot = ggplot(
+  pcom.data,
+  aes(
+    y = BMI,
+    x = Age,
+    color=Oligomenorrhea
+  )) +
+  geom_point(
+    shape = 19,
+    size = 2.3,
+    color="black"
+  ) +
+  geom_point(
+    size = 1.7, 
+    shape = 19,
+    ) +
+  geom_smooth(
+    formula = 'y ~ x', 
+    method = "lm", 
+    se = TRUE,
+    linetype = 2,
+    ) + 
+  theme_grey() +
+  labs(
+    title = "Age and BMI",
+    subtitle = "by Oligomenorrhea Diagnosis",
+    x = "Age",
+    y = "BMI"
+  )
+
+plot
+
+#dev.off()
+
+```
+
+We see that there's a possibility of a significant difference here, but it's not quite there yet. Maybe with more data this would resolve better.
+
+
+```{r graph BMI Testosterone scatter}
+#png(file="BMI-Testosterone-Oligo-scatter.png", width=600, height=350)
+
+plot = ggplot(
+  pcom.data,
+  aes(
+    y = BMI,
+    x = Testosterone.ng.mL,
+    color=Oligomenorrhea
+  )) +
+  geom_point(
+    shape = 19,
+    size = 2.3,
+    color="black"
+  ) +
+  geom_point(
+    size = 1.7, 
+    shape = 19,
+    ) +
+  geom_smooth(
+    formula = 'y ~ x', 
+    method = "lm", 
+    se = TRUE,
+    linetype = 2,
+    ) + 
+  theme_grey() +
+  labs(
+    title = "Testosterone and BMI",
+    subtitle = "by Oligomenorrhea Diagnosis",
+    x = "Testosterone (ng/mL)",
+    y = "BMI"
+  )
+
+plot
+
+#dev.off()
+
+```
+
+The lines intersect which supports our interaction hypothesis, but there is no significant difference between the two groups.
+
+
+```{r graph 3D scatter}
+fig <- plot_ly(
+  type="scatter3d",
+  mode="markers",
+  pcom.data, 
+  x = ~Age, 
+  y = ~BMI, 
+  z = ~Testosterone.ng.mL, 
+  color = ~Oligomenorrhea, 
+  opacity = 0.8,
+  colors = c('#0C4B8E', '#BF382A'),
+  marker = list(
+      size = 6,
+      line = list(
+        color = 'rgb(0, 0, 0)',
+        width=1
+      ))
+  ) %>% layout(title="Testosterone, Age, and BMI <br>by presence of Oligomenorrhea")
+
+
+fig
+```
+
+At the right angle there appears to be a slight clustering of Oligomenorrhea positive patients, but it clearly isn't showing up in our model.
+
+
+```{r heatmap}
+
+pcom.o.pos = filter(pcom.data, Oligomenorrhea == "Oligomenorrhea")
+Age.pos = pcom.o.pos$Age
+BMI.pos = pcom.o.pos$BMI
+Testosterone.ng.mL.pos = pcom.o.pos$Testosterone.ng.mL
+
+pcom.o.neg = filter(pcom.data, Oligomenorrhea == "No Oligo")
+Age.neg = pcom.o.neg$Age
+BMI.neg = pcom.o.neg$BMI
+Testosterone.ng.mL.neg = pcom.o.neg$Testosterone.ng.mL
+
+
+fig1 = plot_ly(
+  type = 'contour', # set plot type
+  x = ~Age.pos,
+  z = ~BMI.pos,
+  y = ~Testosterone.ng.mL.pos,
+  line=list(smoothing=1.3, width=1),
+  contours = list( # set contour lines to heatmap/smoothing method
+    coloring = 'heatmap',
+    showlabels = TRUE,
+    labelfont=list(color="lightgrey")
+  ),
+  coloraxis="coloraxis" # select color axis so both plots share one BMI axis
+  ) %>%
+  layout(
+    xaxis = list(title = 'Age', gridcolor = 'ffff'), # axis labels
+    yaxis = list(title = 'Testosterone (ng/mL)', gridcolor = 'ffff')
+    )
+
+fig2 = plot_ly(
+  type = 'contour',
+  x = ~Age.neg,
+  z = ~BMI.neg,
+  y = ~Testosterone.ng.mL.neg,
+  line=list(smoothing=1.3, width=1),
+  contours = list(
+    coloring = 'heatmap',  # enumerated , one of ( "fill" | "heatmap" | "lines" | "none" )
+    showlabels = TRUE,
+    labelfont=list(color="lightgrey")
+  ),
+  coloraxis="coloraxis" # matches plot 1 so BMI will share axis
+  ) %>%
+  layout(
+    xaxis = list(title = 'Age', gridcolor = 'ffff'), 
+    yaxis = list(title = 'Testosterone (ng/mL)', gridcolor = 'ffff') # --this is ignored if Y axis is shared--
+    )
+
+# build subplots
+fig <- subplot(
+  fig1, fig2, 
+  nrows = 1, # make sure plots are side by side, not one above the other
+  titleY = TRUE, 
+  titleX = TRUE, 
+  margin = 0.05,
+  shareY = TRUE # share the y axis. (I might remove this)
+  )
+
+fig <- fig %>% # add layout options
+  layout(
+    title = '<b>Age and Testosterone correlation with BMI</b>',
+    showlegend = FALSE, 
+    coloraxis=list( #color scale and range
+      colorscale="Jet", 
+      cmax=35, 
+      cmin=20, 
+      colorbar=list(
+        title=list(text="BMI")
+        )
+      )
+    )
+
+# add annotations for positive and negative labels on plots
+annotations = list( 
+  list( 
+    x = 0.0775,  
+    y = .956,  
+    text = "Oligomenorrhea",  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE,
+    font = list(color= "White"),
+    bgcolor="#4f4f4f"
+  ),  
+  list( 
+    x = 0.6425,  
+    y = .956,  
+    text = "No Oligomenorrhea",  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE,
+    font = list(color= "White"),
+    bgcolor="#4f4f4f"
+  )
+)
+
+fig <- fig %>%layout(annotations = annotations) # add annotations to plots
+
+
+fig
+
+```
+
+The high BMI regions between the two plots don't really overlap, which might support our findings of a cluster in the 3D scatter plot. However, this clustering is not being picked up in our model.
+
+

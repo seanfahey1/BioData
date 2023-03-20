@@ -1,0 +1,117 @@
+Specimen id#,Age,BMI,Testosterone ng/mL,Oligomenorrhea
+1,34,24.8,0.26,No Oligo
+2,23,27.4,0.6,No Oligo
+3,26,44,0.32,Oligomenorrhea
+4,32,29.2,0.85,Oligomenorrhea
+7,26,33.4,0.73,Oligomenorrhea
+9,30,25.9,0.52,Oligomenorrhea
+12,28,25.6,0.34,No Oligo
+13,25,26.5,0.45,Oligomenorrhea
+14,20,25.1,0.82,No Oligo
+15,31,30,0.62,No Oligo
+16,29,32.6,0.8,No Oligo
+17,30,18.9,0.25,Oligomenorrhea
+18,19,19.1,0.43,Oligomenorrhea
+19,27,23.8,0.12,No Oligo
+20,33,19.8,0.31,Oligomenorrhea
+21,23,23.4,0.54,Oligomenorrhea
+22,23,25,0.31,Oligomenorrhea
+23,22,20.4,0.47,No Oligo
+24,24,34.6,0.5,Oligomenorrhea
+25,24,32.3,0.66,Oligomenorrhea
+26,29,29.7,0.35,Oligomenorrhea
+27,37,20.9,0.87,No Oligo
+28,29,17.2,0.53,Oligomenorrhea
+29,31,33.9,0.4,No Oligo
+30,29,31.3,0.22,Oligomenorrhea
+32,32,36.7,0.36,No Oligo
+34,31,24,0.53,No Oligo
+36,23,28.6,0.4,No Oligo
+37,37,27.4,0.54,No Oligo
+39,27,24.3,0.66,Oligomenorrhea
+40,21,27.4,1.09,Oligomenorrhea
+42,25,24.5,0.81,No Oligo
+43,29,26.8,0.18,No Oligo
+45,24,19,0.5,No Oligo
+46,26,32,0.41,No Oligo
+48,25,25.3,0.69,No Oligo
+50,34,22.9,0.57,No Oligo
+52,28,34.2,0.69,No Oligo
+54,21,20.9,0.47,Oligomenorrhea
+55,33,39,0.31,Oligomenorrhea
+56,32,20.4,0.45,No Oligo
+57,25,27.6,0.99,Oligomenorrhea
+58,34,26.4,0.5,No Oligo
+59,39,37.1,0.35,No Oligo
+60,27,30,0.32,No Oligo
+61,21,19.2,0.35,Oligomenorrhea
+62,37,26.9,0.46,Oligomenorrhea
+63,25,26.5,0.3,No Oligo
+64,31,30.7,0.87,No Oligo
+65,35,43.5,0.56,Oligomenorrhea
+66,25,21.1,1.01,No Oligo
+67,20,21.4,0.66,Oligomenorrhea
+68,24,19.5,0.62,Oligomenorrhea
+69,17,22.6,0.5,No Oligo
+73,34,27,0.54,No Oligo
+75,32,21.9,0.49,No Oligo
+77,28,19.3,0.94,Oligomenorrhea
+78,27,19.6,0.47,No Oligo
+79,27,29.4,0.49,No Oligo
+80,28,35.1,0.72,Oligomenorrhea
+81,25,21.1,0.8,No Oligo
+82,40,25.7,0.17,No Oligo
+83,26,22.3,0.16,No Oligo
+84,41,28,0.83,No Oligo
+86,19,16.3,0.58,Oligomenorrhea
+87,25,17.5,0.66,Oligomenorrhea
+88,24,19,0.65,Oligomenorrhea
+89,28,23.9,0.3,No Oligo
+90,25,21.5,0.31,No Oligo
+94,37,19.1,0.4,No Oligo
+100,25,24.1,0.42,No Oligo
+102,32,19.9,0.21,No Oligo
+105,33,18.7,0.18,No Oligo
+119,28,29.2,0.41,No Oligo
+121,32,18.8,0.09,No Oligo
+122,30,19.3,0.02,No Oligo
+124,38,18.7,0.17,No Oligo
+130,24,21.9,0.26,No Oligo
+134,31,19.9,0.25,No Oligo
+135,28,19.8,0.63,No Oligo
+142,37,22.9,0.33,No Oligo
+143,23,22.4,0.28,No Oligo
+146,31,19.4,0.36,No Oligo
+149,28,26.4,0.42,No Oligo
+150,18,22.9,0.41,No Oligo
+151,31,20.1,0.03,No Oligo
+153,26,20.1,0.31,No Oligo
+154,28,29.9,0.35,No Oligo
+156,28,22.5,0.51,No Oligo
+158,27,18.9,0.07,No Oligo
+159,34,22.3,0.37,No Oligo
+160,27,20.1,0.8,No Oligo
+161,28,19.9,0.29,No Oligo
+163,29,22,0.45,No Oligo
+164,25,23.3,0.51,No Oligo
+165,20,17.5,0.53,No Oligo
+167,30,18.7,0.2,No Oligo
+169,35,23.2,0.15,No Oligo
+172,27,19.2,0.58,No Oligo
+173,38,26.5,0.25,No Oligo
+174,29,23.1,0.55,No Oligo
+176,30,20.9,0.47,No Oligo
+181,27,21.6,0.33,No Oligo
+182,26,18.5,0.42,No Oligo
+184,32,19,0.24,No Oligo
+187,26,20.7,0.4,No Oligo
+188,25,24.8,0.42,No Oligo
+33,37,28.4,0.42,No Oligo
+35,27,17,0.51,No Oligo
+38,25,33.7,0.6,Oligomenorrhea
+44,35,22.9,0.59,No Oligo
+70,25,20.2,0.38,No Oligo
+71,35,44.2,0.65,No Oligo
+72,39,31.9,0.35,Oligomenorrhea
+74,30,22.2,0.56,No Oligo
+133,24,19.4,0.46,No Oligo

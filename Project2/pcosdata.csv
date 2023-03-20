@@ -1,0 +1,176 @@
+Specimen id#,Age,BMI,Hirsutism,Testosterone ng/mL,Oligomenorrhea,Hyperandrogenism,Polycystic Ovarian Morphology,Category
+1,34,24.8,8,0.26,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+2,23,27.4,9,0.6,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+3,26,44,4,0.32,Oligomenorrhea,No Hyperandrogenism,PCO ovaries,Oligo+PCOM
+4,32,29.2,10,0.85,Oligomenorrhea,Hyperandrogenism,PCO ovaries,PCOS
+5,20,25.8,8,0.49,Oligomenorrhea,Hyperandrogenism,No PCO ovaries,PCOS
+7,26,33.4,6,0.73,Oligomenorrhea,Hyperandrogenism,PCO ovaries,PCOS
+9,30,25.9,6,0.52,Oligomenorrhea,Hyperandrogenism,PCO ovaries,PCOS
+12,28,25.6,9,0.34,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+13,25,26.5,4,0.45,Oligomenorrhea,No Hyperandrogenism,PCO ovaries,Oligo+PCOM
+14,20,25.1,12,0.82,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+15,31,30,3,0.62,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+16,29,32.6,15,0.8,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+17,30,18.9,0,0.25,Oligomenorrhea,No Hyperandrogenism,PCO ovaries,Oligo+PCOM
+18,19,19.1,19,0.43,Oligomenorrhea,Hyperandrogenism,PCO ovaries,PCOS
+19,27,23.8,0,0.12,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+20,33,19.8,5,0.31,Oligomenorrhea,No Hyperandrogenism,PCO ovaries,Oligo+PCOM
+21,23,23.4,10,0.54,Oligomenorrhea,Hyperandrogenism,PCO ovaries,PCOS
+22,23,25,4,0.31,Oligomenorrhea,No Hyperandrogenism,PCO ovaries,Oligo+PCOM
+23,22,20.4,8,0.47,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+24,24,34.6,6,0.5,Oligomenorrhea,No Hyperandrogenism,PCO ovaries,Oligo+PCOM
+25,24,32.3,14,0.66,Oligomenorrhea,Hyperandrogenism,PCO ovaries,PCOS
+26,29,29.7,4,0.35,Oligomenorrhea,No Hyperandrogenism,PCO ovaries,Oligo+PCOM
+27,37,20.9,6,0.87,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+28,29,17.2,9,0.53,Oligomenorrhea,Hyperandrogenism,PCO ovaries,PCOS
+29,31,33.9,12,0.4,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+30,29,31.3,15,0.22,Oligomenorrhea,Hyperandrogenism,PCO ovaries,PCOS
+32,32,36.7,14,0.36,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+34,31,24,7,0.53,No Oligo,Hyperandrogenism,PCO ovaries,PCOS
+36,23,28.6,13,0.4,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+37,37,27.4,0,0.54,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+39,27,24.3,7,0.66,Oligomenorrhea,Hyperandrogenism,PCO ovaries,PCOS
+40,21,27.4,13,1.09,Oligomenorrhea,Hyperandrogenism,PCO ovaries,PCOS
+42,25,24.5,13,0.81,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+43,29,26.8,6,0.18,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+45,24,19,10,0.5,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+46,26,32,6,0.41,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+48,25,25.3,3,0.69,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+49,36,37.2,8,0.28,No Oligo,Hyperandrogenism,No PCO ovaries,HA+PCOM
+50,34,22.9,11,0.57,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+51,24,16.8,8,0.51,Oligomenorrhea,Hyperandrogenism,No PCO ovaries,PCOS
+52,28,34.2,7,0.69,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+54,21,20.9,1,0.47,Oligomenorrhea,No Hyperandrogenism,PCO ovaries,Oligo+PCOM
+55,33,39,5,0.31,Oligomenorrhea,No Hyperandrogenism,PCO ovaries,Oligo+PCOM
+56,32,20.4,5,0.45,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+57,25,27.6,14,0.99,Oligomenorrhea,Hyperandrogenism,PCO ovaries,PCOS
+58,34,26.4,8,0.5,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+59,39,37.1,6,0.35,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+60,27,30,3,0.32,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+61,21,19.2,3,0.35,Oligomenorrhea,No Hyperandrogenism,PCO ovaries,Oligo+PCOM
+62,37,26.9,9,0.46,Oligomenorrhea,Hyperandrogenism,PCO ovaries,PCOS
+63,25,26.5,5,0.3,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+64,31,30.7,9,0.87,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+65,35,43.5,16,0.56,Oligomenorrhea,Hyperandrogenism,PCO ovaries,PCOS
+66,25,21.1,13,1.01,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+67,20,21.4,10,0.66,Oligomenorrhea,Hyperandrogenism,PCO ovaries,PCOS
+68,24,19.5,6,0.62,Oligomenorrhea,Hyperandrogenism,PCO ovaries,PCOS
+69,17,22.6,4,0.5,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+73,34,27,12,0.54,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+75,32,21.9,6,0.49,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+77,28,19.3,5,0.94,Oligomenorrhea,Hyperandrogenism,PCO ovaries,PCOS
+78,27,19.6,4,0.47,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+79,27,29.4,8,0.49,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+80,28,35.1,12,0.72,Oligomenorrhea,Hyperandrogenism,PCO ovaries,PCOS
+81,25,21.1,10,0.8,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+82,40,25.7,2,0.17,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+83,26,22.3,8,0.16,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+84,41,28,12,0.83,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+86,19,16.3,9,0.58,Oligomenorrhea,Hyperandrogenism,PCO ovaries,PCOS
+87,25,17.5,14,0.66,Oligomenorrhea,Hyperandrogenism,PCO ovaries,PCOS
+88,24,19,10,0.65,Oligomenorrhea,Hyperandrogenism,PCO ovaries,PCOS
+89,28,23.9,9,0.3,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+90,25,21.5,2,0.31,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+91,27,19.3,2,0.53,No Oligo,Hyperandrogenism,No PCO ovaries,HA
+92,27,20.5,5,0.46,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+93,30,24.8,2,0.14,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+94,37,19.1,1,0.4,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+95,28,18,3,0.21,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+96,27,33.9,3,0.31,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+97,27,18.7,2,0.48,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+98,39,31.1,4,0.21,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+99,27,19.5,2,0.56,No Oligo,Hyperandrogenism,No PCO ovaries,HA
+100,25,24.1,2,0.42,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+101,24,19.4,1,0.33,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+102,32,19.9,3,0.21,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+103,33,31.7,4,0.43,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+104,27,20.6,3,0.25,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+105,33,18.7,3,0.18,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+106,39,21.8,2,0.19,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+107,38,24.8,10,0.1,No Oligo,Hyperandrogenism,No PCO ovaries,Control
+108,29,19.4,3,0.73,No Oligo,Hyperandrogenism,No PCO ovaries,Control
+110,28,22.4,3,0.28,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+111,35,22.5,4,0.38,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+112,26,22.8,3,0.2,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+113,26,23.9,1,0.23,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+114,27,22.8,3,0.43,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+115,25,21.5,1,0.3,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+116,25,27.3,4,0.34,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+117,34,30,3,0.19,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+118,23,20,4,0.2,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+119,28,29.2,5,0.41,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+120,25,22,2,0.24,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+121,32,18.8,5,0.09,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+122,30,19.3,2,0.02,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+123,34,25,1,0.34,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+124,38,18.7,2,0.17,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+125,22,20.4,2,0.28,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+126,23,17.9,4,0.16,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+127,29,26.8,3,0.43,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+128,34,23.2,3,0.37,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+129,37,29.2,7,0.26,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+130,24,21.9,1,0.26,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+131,25,22.8,2,0.3,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+132,32,19.4,3,0.25,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+134,31,19.9,4,0.25,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+135,28,19.8,3,0.63,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+136,30,24.4,4,0.41,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+137,31,20.5,3,0.41,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+138,29,24.6,2,0.35,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+139,25,30.6,2,0.34,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+140,25,22.9,3,0.58,No Oligo,Hyperandrogenism,No PCO ovaries,Control
+141,39,19.2,1,0.23,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+142,37,22.9,1,0.33,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+143,23,22.4,2,0.28,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+144,29,25.7,2,0.34,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+145,29,21.4,3,0.5,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+146,31,19.4,4,0.36,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+147,27,18.9,5,0.4,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+148,28,23.5,3,0.26,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+149,28,26.4,7,0.42,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+150,18,22.9,2,0.41,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+151,31,20.1,2,0.03,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+152,36,19,1,0.38,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+153,26,20.1,3,0.31,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+154,28,29.9,2,0.35,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+155,30,20.8,2,0.34,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+156,28,22.5,3,0.51,No Oligo,Hyperandrogenism,PCO ovaries,PCOM
+157,24,25.1,3,0.33,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+158,27,18.9,3,0.07,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+159,34,22.3,6,0.37,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+160,27,20.1,3,0.8,No Oligo,Hyperandrogenism,PCO ovaries,PCOM
+161,28,19.9,2,0.29,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+162,22,32.6,2,0.35,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+163,29,22,11,0.45,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+164,25,23.3,1,0.51,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+165,20,17.5,1,0.53,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+166,26,23.4,5,0.19,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+167,30,18.7,2,0.2,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+168,28,22.9,2,0.27,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+169,35,23.2,2,0.15,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+170,35,25.2,3,0.28,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+171,21,21.4,2,0.38,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+172,27,19.2,1,0.58,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+173,38,26.5,3,0.25,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+174,29,23.1,3,0.55,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+176,30,20.9,4,0.47,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+177,32,31,3,0.44,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+178,30,20.1,4,0.24,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+179,36,23.4,1,0.15,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+181,27,21.6,3,0.33,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+182,26,18.5,6,0.42,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+183,38,25,6,0.25,No Oligo,No Hyperandrogenism,No PCO ovaries,Control
+184,32,19,4,0.24,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+185,36,18.7,8,0.36,No Oligo,Hyperandrogenism,No PCO ovaries,HA
+186,26,22.5,9,0.59,No Oligo,Hyperandrogenism,No PCO ovaries,HA
+187,26,20.7,7,0.4,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+188,25,24.8,8,0.42,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+33,37,28.4,4,0.42,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM
+35,27,17,11,0.51,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+38,25,33.7,2,0.6,Oligomenorrhea,Hyperandrogenism,PCO ovaries,PCOS
+44,35,22.9,9,0.59,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+70,25,20.2,8,0.38,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+71,35,44.2,17,0.65,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+72,39,31.9,7,0.35,Oligomenorrhea,No Hyperandrogenism,PCO ovaries,Oligo+PCOM
+74,30,22.2,9,0.56,No Oligo,Hyperandrogenism,PCO ovaries,HA+PCOM
+133,24,19.4,4,0.46,No Oligo,No Hyperandrogenism,PCO ovaries,PCOM

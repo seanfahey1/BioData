@@ -9,6 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(lme4)
 library(nlme)
+library(ggplot2)
 
 ```
 
@@ -58,23 +59,62 @@ summary(soilm3)
 ```{r import }
 exdata <- read.csv("exotic_removal_data.csv", header=T, na.strings=".") 
 exdata$plot <- as.factor(exdata$plot)
+exdata$treatment <- as.factor(exdata$treatment)
 exdata
 
 ```
 
 
 
-```{r}
+```{r exotic plant removal model}
+# Use lme() to answer the question: Does exotic plant removal affect soil N, and does this depend on seed input? (I.e., did the experiment affect soil N?) -consider how time is being measured here.
+
 exmodel1 = lme(
-  N_ppm ~ veg * treatment, 
+  N_ppm ~ veg * treatment + day_num, 
   random = ~1|plot, 
   method="ML", 
   data=exdata, 
   na.action=na.omit,
   )
 
-anova(exmodel1)
+#anova(exmodel1)
+summary(exmodel1)
 
+```
+
+
+
+```{r plot it}
+#  Produce a figure that depicts soil N and includes the effects of the experiment and time.
+
+ggplot(
+  exdata,
+  aes(
+    x=day_num,
+    y=N_ppm,
+    color=treatment
+  )
+  ) +
+  geom_boxplot(
+    #size=1.5,
+    #shape=1
+  ) +
+  geom_smooth(
+    se=FALSE,
+    method="lm",
+    linewidth=0.5,
+    formula=y~x,
+    color="firebrick"
+  ) +
+  theme_bw() +
+  labs(
+    ylab="Nitrogen (ppm)",
+    xlab="Day Number",
+    title="Nitrogen concentration by day",
+    subtitle = "per treatment and by presence of exotic or native plants"
+  ) +
+  facet_grid(~veg)
+?geom_boxplot
 ```
 
 
@@ -87,35 +127,6 @@ anova(exmodel1)
 
 
 
-```{r}
-
-
-
-```
-
-
-
-```{r}
-
-
-
-```
-
-
-
-```{r}
-
-
-
-```
-
-
-
-```{r}
-
-
-
-```
 
 
 
