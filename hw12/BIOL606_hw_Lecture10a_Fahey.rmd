@@ -1,0 +1,68 @@
+---
+title: "Homework 10a"
+author: "Sean Fahey"
+date: "2023-03-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+
+```
+
+
+```{r import data}
+gut = read.csv("gut_diversity.csv", header=TRUE)
+
+gut$age <- scale(gut$age)
+gut$exercise <- scale(gut$exercise)
+gut$weight <- scale(gut$weight)
+
+gut$subject = as.factor(gut$subject)
+summary(gut)
+```
+
+## In Class Work
+
+Ancova is anova plus regression analysis
+
+Fit a linear model using lm(), with both IVs but no interaction. Look at the intercept and slopes.
+```{r }
+model.both_iv = lm(diversity ~ age + exercise, data=gut)
+summary(model.both_iv)
+```
+
+Fit a separate simple linear regression model using lm() for each IV. Compare the intercept and slopes to the multiple regression model.
+```{r 2 IV with no interactions}
+model.age_only = lm(diversity ~ age, data=gut)
+model.exercise_only = lm(diversity ~ exercise, data=gut)
+
+summary(model.age_only)
+summary(model.exercise_only)
+```
+
+
+```{r }
+
+
+```
+
+
+```{r }
+
+
+```
+
+
+```{r }
+
+
+```
+
+
+```{r }
+
+
+```
+
+
