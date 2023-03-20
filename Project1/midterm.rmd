@@ -1,0 +1,164 @@
+---
+title: "BIOL606_hw_Lecture06_Rouzbehani"
+author: "Ryin Rouzbehani"
+date: "2023-01-27"
+output: html_document
+---
+
+
+```{r}
+rm(list=ls())
+
+library(dbplyr)
+library(dplyr)
+library(pillar)
+library(ggplot2)
+library(ggfortify)
+library(broom)
+
+pdata <- read.csv("pcosdata.csv")
+
+```
+```{r}
+summary(pdata)
+```
+
+
+Creating model
+```{r}
+
+pdata$Oligomenorrhea <- as.factor(pdata$Oligomenorrhea)
+pdata$Polycystic.Ovarian.Morphology <- as.factor(pdata$Polycystic.Ovarian.Morphology)
+pdata$Hyperandrogenism <- as.factor(pdata$Hyperandrogenism)
+pdata$Category <- as.factor(pdata$Category)
+
+pdata <- mutate(pdata, overweight = ifelse((BMI > 25), "Overweight", "Healthy/Low"))
+
+pdata <- mutate(pdata, cat2 = ifelse((Category == "Control" | Category == "HA"), "Control", "Symptomatic"))
+pdata$cat2 <- as.factor(pdata$cat2)
+pdata$overweight <- as.factor(pdata$overweight)
+
+
+pdata2 = filter(pdata, Category != "Control")
+summary(pdata2)
+
+ggplot(
+  pdata2,
+  aes(
+    x=Testosterone.ng.mL,
+    y=Age,
+    color=overweight
+    #shape=Hyperandrogenism
+    )
+  ) + 
+
+  
+  geom_point(
+    size=2) + 
+  
+  theme_bw() + 
+  
+  #facet_wrap(
+  #  ~Hyperandrogenism) + 
+  
+  geom_smooth(
+    method = 'lm',
+    se=FALSE) 
+```  
+# 
+```{r}
+m1 = lm(BMI ~ Testosterone.ng.mL + Age, data=pdata)
+#summary(m1)
+autoplot(m1)
+
+
+m2 = glm(BMI ~ Testosterone.ng.mL + Age, data=pdata, family='poisson')
+
+autoplot(m2)
+summary(m2)
+
+```
+
+```{r}
+ggplot(pdata,aes(x=Age,y=BMI,color=Oligomenorrhea)) + geom_point(size=2) + theme_bw() + geom_smooth(method = 'lm',se=FALSE) +labs(x = "Age (Years)", y = "BMI", title = "")
+model1 = lm(Age ~ BMI + Oligomenorrhea, data = pdata)
+autoplot(model1)
+anova(model1)
+```
+
+```{r}
+ggplot(pdata,aes(x=Testosterone.ng.mL,y=Hirsutism, color=Polycystic.Ovarian.Morphology)) + geom_point(size=2) + theme_bw() + geom_smooth(method = 'lm',se=FALSE) +labs(x = "Testosterone", y = "Hirsutism", title = "")
+
+ggplot(pdata,aes(x=Testosterone.ng.mL,y=Hirsutism)) + geom_point(size=2) + theme_bw() + facet_wrap(~Polycystic.Ovarian.Morphology) + geom_smooth(method = 'lm',se=FALSE) +labs(x = "Testosterone", y = "Hirsutism", title = "")
+
+model1 = lm(Testosterone.ng.mL ~ Age + BMI + Polycystic.Ovarian.Morphology  + Oligomenorrhea, data = pdata)
+autoplot(model1)
+anova(model1)
+summary(model1)
+```
+
+
+```{r}
+#model1 = lm(BMI ~ Hyperandrogenism, data = pdata)
+ggplot(pdata,aes(x=Polycystic.Ovarian.Morphology,y=BMI)) + geom_point(size=2) + theme_bw() + geom_boxplot(outlier.shape = 1)+ geom_jitter(position = position_jitter(0.3), aes(color = Hyperandrogenism))+labs(x = "Age (Years)", y = "BMI", title = "")
+#autoplot(model1)
+anova(model1)
+summary(model1)
+```
+
+```{r}
+model1 = glm(Age ~ Hyperandrogenism, data = pdata,family= poisson)
+autoplot(model1)
+anova(model1)
+summary(model1)
+```
+
+```{r}
+model1 = glm(Age ~ Polycystic.Ovarian.Morphology, data = pdata)
+autoplot(model1)
+anova(model1)
+summary(model1)
+```
+
+
+```{r}
+ggplot(pdata,aes(x=Age,y=BMI,color=Oligomenorrhea)) + geom_point(size=2) + theme_bw() + facet_wrap(~Category) + geom_smooth(method = 'lm',se=FALSE) +labs(x = "Age (Years)", y = "BMI", title = "")
+```
+
+
+```{r}
+
+ggplot(pdata,aes(x=Age,y=BMI,color=Testosterone.ng.mL)) + geom_point(shape=20,size=2) + theme_bw() + geom_smooth(method='lm', se=FALSE, linewidth = 1, linetype = 2) + labs(x = "Age (Years)", y = "BMI", title = "")
+
+```
+
+
+```{r}
+
+ggplot(pdata,aes(x=Age,y=BMI,color=Hirsutism)) + geom_point(shape=20,size=2) + theme_bw() + geom_smooth(method='lm', se=FALSE, linewidth = 1, linetype = 2) + labs(x = "Age (Years)", y = "BMI", title = "")
+
+```
+
+```{r}
+
+#model2 = lm(totalfruits ~ herbivory + pollination, data = cucumberdamage) 
+#autoplot(model2)
+#anova(model2)
+#summary(model2)
+
+#model2g = glm(totalfruits ~ herbivory + pollination, data = cucumberdamage)
+#autoplot(model2g)
+#anova(model2g)
+#summary(model2g)
+#herbiv
+#ggplot(cucumberdamage,aes(x=herbivory,y=totalfruits,color=pollination)) + geom_boxplot(shape=15,size=1) + theme_bw() + geom_smooth(method='lm', se=FALSE, linewidth = 1, linetype = 2) + labs(x = "Herbivory", y = "Total Fruits", title = "The Affect of Herbivory on Fruit Production")
+
+
+```
+
+
+2. Make a figure of the results, with separate lines for the two pollination treatments. 
+
+3. Repeat steps 1 and 2, but instead of "leafdamage," use the categorical treatment variable "herbivory". Think about what the figure will look like for this scenario.
+
+4. Submit on Canvas. Remember to do you assigned peer review also.

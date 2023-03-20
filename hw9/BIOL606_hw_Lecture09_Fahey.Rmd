@@ -1,0 +1,200 @@
+---
+title: "BIOL606_hw_Lecture09_Fahey"
+author: "Sean Fahey"
+date: "2023-02-27"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(ggfortify)
+library(nlme)
+library(car)
+```
+
+# Inclass work
+```{r load data}
+caterpillar = read.csv("blocked_experiment.csv", header=TRUE)
+caterpillar$block = as.factor(caterpillar$block)
+caterpillar$damage = as.factor(caterpillar$damage)
+caterpillar$AMF = as.factor(caterpillar$AMF)
+
+head(caterpillar)
+```
+
+```{r initial plot}
+
+ggplot(
+  caterpillar,
+  aes(
+    y = cat_mass,
+    x = damage,
+    color = damage
+  )
+  ) +
+  geom_boxplot(
+    outlier.shape = 4,
+    show.legend = FALSE
+  ) +
+  labs(
+    y = "catepillar mass",
+    x = "damage"
+  ) +
+  facet_wrap(~AMF) + 
+  theme_minimal()
+
+```
+
+```{r linear model}
+
+# the researcher applied the damage method, and the AMF (the fungus treatment). So go ahead and look to see if these interacted. (We wouldn't look at interactions if these were natural differences with no common sense or clear linkage)
+
+lm1 = lm(cat_mass ~ damage * AMF, data=caterpillar)
+
+autoplot(lm1)
+summary(lm1)
+anova(lm1)
+
+```
+
+```{r cat mass v block plot}
+
+ggplot(
+  caterpillar,
+  aes(
+    y = cat_mass,
+    x = block,
+    color = block
+  )
+  ) +
+  geom_violin(
+    outlier.shape = 4,
+    show.legend = FALSE
+  ) +
+  geom_jitter(
+    width = 0.1
+  ) +
+  labs(
+    y = "catepillar mass",
+    x = "block"
+  ) +
+  theme_minimal()
+
+# looks like there's variation between blocks
+# I don't care about block (because it's just position in the greenhouse) when it comes to my damage/AMF study, so I need to account for this variation in the model, but not have block as part of the answer.
+```
+
+
+```{r lme block model}
+
+lme1 = lme(
+  cat_mass ~ AMF * damage, 
+  random = ~1|block, # the block variable to remove variance from block
+  data=caterpillar, 
+  method = "ML" # just do this for now. He didn't explain why today.
+  )
+
+plot(lme1) # check for homoscedasticity. looks fine.
+qqnorm(resid(lme1)) # residuals go off at the very tails, but look fine
+qqline(resid(lme1))
+hist(resid(lme1)) # looks normally distributed
+summary(lme1)
+anova(lme1)
+
+# manually check if removing the interaction would have had an impact
+lme2 <- update(lme1, ~.-AMF:damage) #shorthand to drop interaction
+anova(lme1,lme2) # looks like the models are statistically the same
+
+# This experiment looks balanced, so we can stick with a simple type I model.
+
+
+# ------ But here's how to do a type III for reference: ------
+options(contrasts = c("contr.sum", "contr.poly"))
+lme2.type3 = lme(
+  cat_mass ~ AMF * damage, 
+  random = ~1|block, # the block variable to remove variance from block
+  data=caterpillar, 
+  method = "ML" # just do this for now. He didn't explain why today.
+  )
+#Anova(lme2.type3, type=3)
+options(contrasts = c("contr.treatment", "contr.poly"))
+# ------------------------------------------------------------ 
+
+```
+
+# Homework
+```{r load dataset}
+
+limpet = read.csv("Limpet_grazing.csv", header = TRUE)
+limpet$Site = as.factor(limpet$Site)
+limpet$LimpetTreat = as.factor(limpet$LimpetTreat)
+
+head(limpet)
+```
+
+```{r exploratory plots}
+# 1) Import data and make exploratory data plots
+
+ggplot(
+  limpet,
+  aes(
+    x = TempC,
+    y = Fo,
+    color = Site
+  )
+  ) + 
+  geom_point(
+    outlier.shape = 4
+  ) +
+  labs(
+    x = "temperature (C)",
+    y = "Ammount of Algae"
+  ) +
+  facet_wrap(~LimpetTreat) +
+  theme_minimal()
+
+```
+
+```{r nlm model}
+# 2) Fit a linear model with LimpetTreat and TempC interaction, accounting forblocking by Site
+
+limpet.model = lme(
+  Fo ~ LimpetTreat * TempC, 
+  random = ~1|Site,
+  data=limpet, 
+  method = "ML"
+  )
+```
+
+```{r fit some plots to check homoscedasticity}
+# 3) Produce diagnostic plots to check for homoscedasticity and normality of the residuals
+
+plot(limpet.model) # looks sort of heteroscedastic? Esprcially at the start. 
+qqnorm(resid(limpet.model)) # residuals go off at the lower end
+qqline(resid(limpet.model))
+hist(resid(limpet.model)) # doesn't look super normal to me
+
+# It actually doesn't look great to me. I'll try again with a type 3 model.
+
+# Trying a type 3 model
+
+options(conttrasts = c("contr.sum", "contr.poly"))
+limpet.model.t3 = lme(
+  Fo ~ LimpetTreat * TempC, 
+  random = ~1|Site,
+  data=limpet, 
+  method = "ML"
+  )
+
+Anova(limpet.model.t3, type=3)
+summary(limpet.model.t3)
+
+options(contrasts = c("contr.treatment", "contr.poly"))
+
+```
+
+
+Results: I analyzed how changes in microalgae abundance relate to temperature and limpet snail grazing at 8 different sites using a linear mixed model with lme() in the nlme package (Pinheiro et al. 2018) of R (R Development Core Team 2018). There were significant effects of limpet treatment (Chi Squared = 36.520, p = 5.814e-8) and the limpet treatment x temperature interaction (Chi squared 26.865, p = 6.285e-06) on microalgae abundance.
+
+

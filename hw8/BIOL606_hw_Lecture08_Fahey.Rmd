@@ -1,0 +1,320 @@
+---
+title: "Tbdeer"
+author: "Sean Fahey"
+date: "2023-02-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(ggplot2)
+library(lme4)
+library(stargazer)
+
+```
+
+# Homework section
+```{r loading data}
+deer = read.table("TBdeer.txt", header=T)
+
+deer$Farm = as.factor(deer$Farm)
+deer$Fenced = as.factor(deer$Fenced)
+deer$DeerNegCervi = deer$DeerSampledCervi - deer$DeerPosCervi # get the number of negative for each farm
+deer$BoarNegTB = deer$BoarSampledTB - deer$BoarPosTB # get the number of negative for each farm
+
+
+summary(deer)
+head(deer)
+```
+
+```{r finding a non-correlated pair of columns}
+
+m1 = glm(QuercusPlants ~ QuercusTrees, data=deer)
+summary(m1)
+# AIC is bad, but already this is looking a bit too correlated. Skipping to another pair.
+
+m2 = glm(QuercusPlants ~ ScrubLand, data=deer)
+summary(m2)
+# linear has bad  deviance
+
+m3 = glm(QuercusPlants ~ ScrubLand, data=deer, family=quasipoisson)
+summary(m3)
+# This pair looks pretty weakly correlated
+
+ggplot(
+  deer,
+  aes(
+    y = QuercusPlants,
+    x = ScrubLand
+  )
+  ) + 
+  geom_point(
+    size=1, 
+    shape=20
+    ) +
+  geom_smooth(
+    method=lm, 
+    se=FALSE
+    )
+# looks pretty uncorrelated. This pair will work.
+
+```
+
+```{r model for deer cervi}
+
+# cbinding negative and positive for cervi for the binomial model
+deer.cervi.model = glm(cbind(DeerPosCervi, DeerNegCervi) ~ QuercusPlants * QuercusTrees, data=deer, family=binomial)
+# I included the interaction because even though I know these two aren't correlated, I still want to see if they have some weird interaction for cervi infection.
+
+summary(deer.cervi.model)
+# Looks like there isn't a statistically significant correlation between trees and the DV here. Also no interaction effect. The Residual deviance isn't great, but I can't change it for a binomial model.
+# But there is almost a correlation with Plants. An anova can look at this further.
+
+anova(deer.cervi.model, test="LRT")
+# Turns out, Plants has a statistically significant positive correlation with cervi infection in deer!
+
+```
+
+
+```{r model for boar TB}
+
+# cbinding negative and positive for cervi for the binomial model
+boar.TB.model = glm(cbind(BoarPosTB, BoarNegTB) ~ QuercusPlants * QuercusTrees, data=deer, family=binomial)
+# I included the interaction again
+
+summary(boar.TB.model)
+# Looks like Trees has a statistically positive negative correlation with TB in boars, and the interaction effect between trees and plants has a very statistically significant positive correlation.
+
+anova(boar.TB.model, test="LRT")
+# anova confirms these results
+
+```
+
+```{r deer cervi plot}
+# qlogis is the default stats package substitute for logit()
+deer$logit.deer.cervi = qlogis(deer$DeerPosCervi/deer$DeerNegCervi)
+
+ggplot(
+  deer,
+  aes(
+    y = logit.deer.cervi,
+    x = QuercusPlants,
+  )
+  ) + 
+  geom_point(
+    size=2,
+    shape=20,
+    color="blue"
+  ) +
+  geom_smooth(
+    se=FALSE,
+    method=lm,
+    formula=y~x,
+    color="blue"
+  ) +
+  geom_point(
+    aes(
+      y = logit.deer.cervi,
+      x = QuercusTrees,
+    ), 
+    color = "red"
+  ) +
+  geom_smooth(
+    se=FALSE,
+    method=lm,
+    formula=y~x,
+    aes(
+      y = logit.deer.cervi,
+      x = QuercusTrees,
+    ),
+    color="red"
+  ) +
+  labs(
+    x = "Quercus Count (red=Trees, blue=Plants)",
+    y = "ln(DeerPosCervi / DeerNegCervi)"
+  ) + theme_minimal()
+
+```
+
+```{r boar TB plot}
+# qlogis is the default stats package substitute for logit()
+deer$logit.boar.TB = qlogis(deer$BoarPosTB/deer$BoarNegTB)
+
+ggplot(
+  deer,
+  aes(
+    y = logit.boar.TB,
+    x = QuercusPlants,
+  )
+  ) + 
+  geom_point(
+    size=2,
+    shape=20,
+    color="blue"
+  ) +
+  geom_smooth(
+    se=FALSE,
+    method=lm,
+    formula=y~x,
+    color="blue"
+  ) +
+  geom_point(
+    aes(
+      y = logit.boar.TB,
+      x = QuercusTrees,
+    ), 
+    color = "red"
+  ) +
+  geom_smooth(
+    se=FALSE,
+    method=lm,
+    formula=y~x,
+    aes(
+      y = logit.boar.TB,
+      x = QuercusTrees,
+    ),
+    color="red"
+  ) +
+  labs(
+    x = "Quercus Count (red=Trees, blue=Plants)",
+    y = "ln(BoarPosTB / BoarNegTB)"
+  ) + theme_minimal()
+
+```
+
+
+
+
+# Hajduk 2017 linear mixed models
+```{r setting up dragons dataset}
+
+load("dragons.RData")
+summary(dragons)
+
+# look at the distribution. Make sure it's normal.
+hist(dragons$testScore)
+
+# standardize the column so mean is 0 and standard deviation is 1
+dragons$bodyLength2 <- scale(dragons$bodyLength)
+
+```
+
+
+``` {r Hajduk plot linear model}
+
+# start with a linear model
+basic.lm <- lm(testScore ~ bodyLength2, data = dragons)
+summary(basic.lm)
+
+# plot it
+ggplot(dragons, aes(x = bodyLength, y = testScore)) +
+  geom_point() +
+  geom_smooth(method = "lm") 
+```
+
+``` {r Hajduk plot residuals}
+
+# which = 1 sets it to plot residuals
+plot(basic.lm, which = 1)
+```
+
+``` {r Hajduk Q-Q plot}
+
+# which = 2 selects a Q-Q plot
+plot(basic.lm, which = 2)
+```
+
+``` {r observation independence}
+
+# checking if mountain range affects test score
+boxplot(testScore ~ mountainRange, data = dragons)
+
+# same but with color so we can see body length v. test score correlation per mountain range
+ggplot(dragons, aes(x = bodyLength, y = testScore, colour = mountainRange)) +
+  geom_point(size = 2) +
+  theme_classic() +
+    theme(legend.position = "none")
+```
+
+``` {r multiple analyses}
+
+# same but with faceted plots instead of color
+
+ggplot(
+  aes(
+    bodyLength, 
+    testScore
+    ), 
+  data = dragons) + 
+  geom_point() + 
+  facet_wrap(~ mountainRange) + 
+  xlab("length") + 
+  ylab("test score")
+```
+
+``` {r modify the current model}
+# different model
+mountain.lm <- lm(testScore ~ bodyLength2 + mountainRange, data = dragons)
+summary(mountain.lm)
+```
+
+``` {r Mixed effects model}
+# get linear model
+mixed.lmer <- lmer(testScore ~ bodyLength2 + (1|mountainRange), data = dragons)
+summary(mixed.lmer)
+
+plot(mixed.lmer)
+
+# plot the qqnorm plot
+qqnorm(resid(mixed.lmer))
+qqline(resid(mixed.lmer))
+```
+
+``` {r Types of random effects}
+head(dragons)
+str(dragons)
+dragons <- within(dragons, sample <- factor(mountainRange:site))
+```
+
+``` {r second mixed model}
+
+mixed.lmer2 <- lmer(testScore ~ bodyLength2 + (1|mountainRange) + (1|sample), data = dragons)
+summary(mixed.lmer2)
+
+# plot each body length v. test score per mountain range. Colored by Site.
+ggplot(dragons, aes(x = bodyLength, y = testScore, colour = site)) +
+  facet_wrap(~mountainRange, nrow=3) +
+  geom_point() +
+  theme_classic() +
+  geom_line(data = cbind(dragons, pred = predict(mixed.lmer2)), aes(y = pred)) +
+  theme(legend.position = "none")
+```
+
+``` {r Presenting your model results using stargazer}
+
+# stargazer example
+stargazer(mixed.lmer2, type = "text",
+          digits = 3,
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          digit.separator = "")
+```
+
+``` {r model selection}
+# set up 2 different models
+full.lmer <- lmer(testScore ~ bodyLength2 + (1|mountainRange) + (1|sample), 
+				  data = dragons, REML = FALSE)
+
+reduced.lmer <- lmer(testScore ~ 1 + (1|mountainRange) + (1|sample), 
+					data = dragons, REML = FALSE)
+
+# annova between the 2 models
+anova(reduced.lmer, full.lmer)
+```
+
+
+
+
+
+
+

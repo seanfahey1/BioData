@@ -1,0 +1,356 @@
+---
+title: "Project 2"
+author: "Sean Fahey, Andrew Levine, Ryin Rouzbehani"
+date: "2023-03-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(car)
+library(plotly)
+library(nlme)
+library(lme4)
+library(scales)
+```
+
+
+```{r import data}
+pcom.data <- read.csv("PCOMdata.csv")
+
+# convert No to 0, yes to 1. 
+pcom.data$Oligo2 = ifelse(pcom.data$Oligomenorrhea == "No Oligo",0,1)
+pcom.data$Oligo3 = ifelse(pcom.data$Oligomenorrhea == "No Oligo",1,2)
+pcom.data$Oligomenorrhea = as.factor(pcom.data$Oligomenorrhea)
+
+str(pcom.data)
+head(pcom.data)
+count(pcom.data, Oligomenorrhea) # data set is unbalanced
+
+# Follow boar HW slides to adjust model to binomial
+# Talk to Nick about how to report DF and F (or t??)
+# Do we need to check residuals in type 3 model?
+# should we logit
+
+```
+
+
+```{r}
+
+ggplot(pcom.data, aes(x = Age)) +
+  geom_histogram(fill = "cornflowerblue", color = "black") +
+  labs(title = "Age Distribution", x = "Age")
+
+ggplot(pcom.data, aes(x = Testosterone.ng.mL)) +
+  geom_histogram(fill = "cornflowerblue", color = "black") +
+  labs(title = "Testosterone Distribution", x = "Testosterone (ng/mL)")
+
+ggplot(pcom.data, aes(x = BMI)) +
+  geom_histogram(fill = "cornflowerblue", color = "black") +
+  labs(title = "BMI Distribution", x = "BMI")
+
+ggplot(pcom.data, aes(x = logit(BMI))) +
+  geom_histogram(fill = "cornflowerblue", color = "black") +
+  labs(title = "Logit BMI Distribution", x = "Logit BMI")
+
+ggplot(pcom.data, aes(x = Oligo2)) +
+  geom_histogram(fill = "cornflowerblue", color = "black") +
+  labs(title = "Oligomenorrhea Distribution", x = "Oligomenorrhea")
+
+
+```
+
+
+
+```{r set up type 3 linear model}
+
+# use a type 3 because data is unbalanced 
+options(contrasts = c("contr.sum", "contr.poly"))
+
+
+### Use the boar 
+
+
+model.1 = glm(
+  # assuming Testosterone, age, and BMI all interact.
+  Oligo2 ~ Age * logit(BMI) * Testosterone.ng.mL,
+  data=pcom.data,
+  family = "binomial"
+  )
+
+options(contrasts = c("contr.treatment", "contr.poly"))
+```
+
+```{r anova}
+Anova(
+  model.1, 
+  type=2, 
+  test.statistic="LR"
+  )
+
+```
+
+```{r summary}
+summary(model.1)
+```
+
+
+```{r}
+# "Binomial data can't be overdispersed (supposedly), so don't worry about it. Plotting binomial residuals makes cool pictures, but interpreting them is very hard."
+# "   - Nick Barber"
+
+# cool pictures, impossible to interpret
+plot(model.1)
+
+```
+
+
+
+```{r graph 1a}
+ggplot(pcom.data, aes(x = Oligomenorrhea, y = Age)) +
+  geom_boxplot(aes(fill = Oligo2), 
+               position = position_dodge(width = 0.8),
+               alpha = 0.8,
+               outlier.shape = NA,
+               width = 0.5) +
+  geom_jitter(aes(color = Testosterone.ng.mL),
+              position = position_jitterdodge(
+                jitter.width = 0.1,
+                jitter.height = 0,
+                dodge.width = 0.8
+              ),
+              size = 2.3,
+              alpha = 0.8) +
+  geom_smooth(aes(group = 1),
+              method = "glm",
+              method.args = list(family = "binomial"),
+              formula = y ~ x,
+              se = FALSE,
+              linetype = "dashed",
+              color = "red",
+              size = 1) +
+  scale_color_gradient2(
+    midpoint = mean(pcom.data$Testosterone.ng.mL),
+    low = "orangered",
+    high = "limegreen"
+  ) +
+  labs(title = "Oligomenorrhea by Testosterone and Age",
+       subtitle = "",
+       x = "Oligomenorrhea",
+       y = "Age",
+       fill = "Oligomenorrhea",
+       color = "Testosterone.ng.mL") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5),
+        legend.position = "bottom",
+        legend.direction = "horizontal",
+        legend.key.width = unit(1.2, "cm"))
+```
+
+
+
+```{r graph 1b}
+ggplot(
+  pcom.data,
+  aes(
+    y = Oligomenorrhea,
+    x = Age,
+    color = Testosterone.ng.mL,
+  )
+  ) +
+  geom_point(
+    size = 2.3,
+    alpha = 0.6,
+    color="black"
+  ) +
+  geom_point(
+    size = 1.7, 
+    alpha = 0.6
+    ) +
+  geom_smooth(
+    se = FALSE,
+    method = "lm",
+    formula = y~x,
+    color = "red",
+    size = 1.2,
+    linetype = 2
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Correlation Between Age, Testosterone Level, and BMI",
+    subtitle = "For Both Presence and Absence of Oligomenorrhea",
+    x = "Age",
+    y = "Oligomenorrhea",
+    color = "Testosterone\n(ng/mL)"
+  ) +
+  scale_color_gradientn(
+    colors = c("orangered", "white", "limegreen"),
+    limits = range(pcom.data$Testosterone.ng.mL),
+    breaks = pretty_breaks(5)
+  ) +
+  theme(
+    panel.grid.major = element_line(color = "gray90", size = 0.5),
+    panel.grid.minor = element_line(color = "gray95", size = 0.5),
+    plot.title = element_text(size = rel(1.2), face = "bold"),
+    plot.subtitle = element_text(size = rel(1), face = "bold"),
+    legend.title = element_text(size = 10)
+  ) +
+  coord_cartesian(ylim = c(0.4, 2.6)) +
+  labs(
+    title = "Correlation Between Age, Testosterone Level, and BMI",
+    subtitle = "For Both Presence and Absence of Oligomenorrhea",
+    x = "Age",
+    y = "Oligomenorrhea",
+    color = "Testosterone\n(ng/mL)"
+  )
+
+
+```
+
+
+
+```{r graph 1c}
+fig <- plot_ly(
+  type="scatter3d",
+  mode="markers",
+  pcom.data, 
+  x = ~Age, 
+  y = ~BMI, 
+  z = ~Testosterone.ng.mL, 
+  color = ~Oligomenorrhea, 
+  opacity = 0.8,
+  colors = c('#0C4B8E', '#BF382A'),
+  marker = list(
+      size = 6,
+      line = list(
+        color = 'rgb(0, 0, 0)',
+        width=1
+      ))
+  ) %>% layout(title="Testosterone, Age, and BMI <br>by presence of Oligomenorrhea")
+
+
+fig
+```
+
+
+
+```{r graph 2}
+
+pcom.o.pos = filter(pcom.data, Oligomenorrhea == "Oligomenorrhea")
+Age.pos = pcom.o.pos$Age
+BMI.pos = pcom.o.pos$BMI
+Testosterone.ng.mL.pos = pcom.o.pos$Testosterone.ng.mL
+
+pcom.o.neg = filter(pcom.data, Oligomenorrhea == "No Oligo")
+Age.neg = pcom.o.neg$Age
+BMI.neg = pcom.o.neg$BMI
+Testosterone.ng.mL.neg = pcom.o.neg$Testosterone.ng.mL
+
+
+fig1 = plot_ly(
+  type = 'contour', # set plot type
+  x = ~Age.pos,
+  z = ~BMI.pos,
+  y = ~Testosterone.ng.mL.pos,
+  line=list(smoothing=1.3, width=1),
+  contours = list( # set contour lines to heatmap/smoothing method
+    coloring = 'heatmap',
+    showlabels = TRUE,
+    labelfont=list(color="lightgrey")
+  ),
+  coloraxis="coloraxis" # select color axis so both plots share one BMI axis
+  ) %>%
+  layout(
+    xaxis = list(title = 'Age', gridcolor = 'ffff'), # axis labels
+    yaxis = list(title = 'Testosterone (ng/mL)', gridcolor = 'ffff')
+    )
+
+fig2 = plot_ly(
+  type = 'contour',
+  x = ~Age.neg,
+  z = ~BMI.neg,
+  y = ~Testosterone.ng.mL.neg,
+  line=list(smoothing=1.3, width=1),
+  contours = list(
+    coloring = 'heatmap',  # enumerated , one of ( "fill" | "heatmap" | "lines" | "none" )
+    showlabels = TRUE,
+    labelfont=list(color="lightgrey")
+  ),
+  coloraxis="coloraxis" # matches plot 1 so BMI will share axis
+  ) %>%
+  layout(
+    xaxis = list(title = 'Age', gridcolor = 'ffff'), 
+    yaxis = list(title = 'Testosterone (ng/mL)', gridcolor = 'ffff') # --this is ignored if Y axis is shared--
+    )
+
+# build subplots
+fig <- subplot(
+  fig1, fig2, 
+  nrows = 1, # make sure plots are side by side, not one above the other
+  titleY = TRUE, 
+  titleX = TRUE, 
+  margin = 0.05,
+  shareY = TRUE # share the y axis. (I might remove this)
+  )
+
+fig <- fig %>% # add layout options
+  layout(
+    title = '<b>Age and Testosterone correlation with BMI</b>',
+    showlegend = FALSE, 
+    coloraxis=list( #color scale and range
+      colorscale="Jet", 
+      cmax=35, 
+      cmin=20, 
+      colorbar=list(
+        title=list(text="BMI")
+        )
+      )
+    )
+
+# add annotations for positive and negative labels on plots
+annotations = list( 
+  list( 
+    x = 0.0775,  
+    y = .956,  
+    text = "Oligomenorrhea",  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE,
+    font = list(color= "White"),
+    bgcolor="#4f4f4f"
+  ),  
+  list( 
+    x = 0.6425,  
+    y = .956,  
+    text = "No Oligomenorrhea",  
+    xref = "paper",  
+    yref = "paper",  
+    xanchor = "center",  
+    yanchor = "bottom",  
+    showarrow = FALSE,
+    font = list(color= "White"),
+    bgcolor="#4f4f4f"
+  )
+)
+
+fig <- fig %>%layout(annotations = annotations) # add annotations to plots
+
+
+fig
+
+```
+
+
+
+
+
+
+
+
+
+
+

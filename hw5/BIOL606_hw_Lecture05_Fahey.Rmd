@@ -1,0 +1,275 @@
+---
+title: "BIOL606_hw_Lecture05_Fahey"
+author: "Sean Fahey"
+date: "2023-02-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(ggplot2)
+library(ggfortify)
+```
+
+# Is total male flowers affected by number of leaves AND pollination treatment (in a single linear model)? 
+### hypothesis: No, total male flowers is positively correlated with the number of leaves (bigger plants have both more leaves and more flowers), but pollination method does not have any effect (because the flower has already grown once pollination happens).
+
+
+```{r get dataset ready}
+flowercounts <- read.csv("lecture3_flowercounts.csv")
+flowercounts$plant <- as.factor(flowercounts$plant)
+
+cucumberdamage <- read.csv("lecture3_cucumberdamage.csv")
+cucumberdamage$plant <- as.factor(cucumberdamage$plant)
+
+
+flowertotals = summarize(
+  group_by(flowercounts, plant),
+  sumF = sum(F),
+  sumM = sum(M),
+  sumTotal = sum(M) + sum(F)
+  )
+
+# flowertotals = slice(flowertotals, 1:200) # summarize spits out an NA row at the end. This seems to get rid of it.
+
+cfdata = left_join(cucumberdamage, flowertotals, by="plant") # joining works like sql
+
+summary(cfdata)
+glimpse(cfdata)
+
+```
+
+```{r question 2}
+# Visualize the data in a plot
+
+male_plot = ggplot(
+  cfdata,
+  aes(
+    x=num_leaves,
+    y=sumM,
+    color=pollination # color by pollination feature
+  )) +
+  geom_point(
+    shape=20,
+    size=1,
+    na.rm=TRUE # put this in geom_point AND geom_smooth to prevent warnings. No change to plot.
+  ) +
+  theme_bw() +
+  geom_smooth(
+    formula = y~x,
+    method = 'lm',
+    se=FALSE, # hide shaded area for standard error of line
+    na.rm = TRUE
+  )
+
+male_plot
+
+```
+
+
+```{r question 3}
+# Build a model using lm()
+
+model1 = lm( # set up a linear model
+  sumM ~ num_leaves + pollination, # y~x, independ. v. depend. --or-- response v. feature
+  data = cfdata
+  )
+
+```
+
+
+```{r question 4}
+# Assess the model
+
+#autoplot(
+#  model1, 
+#  smooth.colour = 2)
+# residuals are how far off from regression line each data point was.
+# good test of homo/heteroscadicity. Do we have more/less variance as we approach one side? approach ends? etc.
+plot(model1) # this seems prettier than autoplot
+
+# Residuals show some non-flat pattern, but are overall okay. 
+# QQ plot looks good. No huge deviations in standardized residuals as the values get further from the mean.
+# Scale location plot (square root of residuals) shows no crazy data points. Similar to residual plot
+# Residuals v. Leverage plot shows a couple data points with higher leverage, but nothing too wild. Overall it looks pretty good.
+
+```
+
+
+```{r question 5}
+# Interpret the model, particularly in light of your hypothesis
+
+anova(model1) # analysis of variance
+
+```
+
+```{r  question 5 cont.}
+
+summary(model1)
+
+# There's a positive relationship between each dependent variable (number of leaves and pollination), and the total number of male flowers. The relationship between number of leaves and number of male flowers is statistically significant (Df: 1, 163 F: 85.68 p < 2e-16). 
+
+# The relationship between pollination method and number of male flowers is not statistically significant (Df 1, 163 F: 0.6075 p: 0.437)
+
+# My hypothesis is correct. Number of leaves has a positive correlation with the number of male flowers that is statistically significant, but the pollination method does not have a statistically significant correlation with the number of male flowers.
+```
+
+
+```{r question 6}
+# Plot your results the way you would want it to look in a journal (or on grandma's refrigerator)
+
+ggplot(
+  cfdata,
+  aes(
+    x=num_leaves,
+    y=sumM,
+    color=pollination
+  )) +
+  geom_point(
+    shape=20,
+    size=1,
+  ) +
+  theme_minimal() +
+  geom_smooth(
+    method='lm',
+    se=FALSE,
+    linewidth = 0.5,
+    linetype = 2
+  ) +
+  labs(
+    x = "Number of Leaves",
+    y = "Number of Male Flowers",
+    title = "Number of Leaves v. Number of Male Flowers",
+    subtitle = "By Pollination Method",
+  )
+
+```
+
+
+# Beckerman ch 7
+
+```{r load dataset}
+
+soay <- read.csv("../Beckerman-datasets-master/soaysheepfitness.csv")
+glimpse(soay)
+
+```
+
+
+```{r plot it}
+
+ggplot(
+  soay, 
+  aes(
+    x = body.size, 
+    y = fitness)) +
+geom_point() +
+geom_smooth(
+  method = "lm", 
+  se = FALSE) +
+geom_smooth(
+  span = 1, 
+  colour = "red", 
+  se = FALSE) +
+xlab("Body mass (kg)") + 
+ylab("Lifetime fitness")
+
+```
+
+
+```{r build linear model}
+
+soay.glm = glm(
+  fitness ~ body.size, 
+  data = soay, 
+  family = poisson(link = log)) 
+
+autoplot(soay.glm)
+```
+
+
+```{r annova}
+
+anova(soay.glm, test = "Chisq")
+
+```
+
+
+```{r summarize linear model}
+
+summary(soay.glm)
+
+```
+
+
+```{r predict using fake data}
+
+min.size = min(soay$body.size) # get the lowest and highest body sizes
+max.size = max(soay$body.size)
+
+new.x = expand.grid( # get 1000 data points evenly distributed from lowest to highest body size
+  body.size = seq(
+    min.size, 
+    max.size, 
+    length=1000
+    ))
+
+
+new.y = predict( # use the glm to predict from our fake data
+  soay.glm, 
+  newdata = new.x, 
+  se.fit = TRUE)
+
+new.y = data.frame(new.y)
+
+head(new.y)
+head(new.x)
+```
+
+
+```{r combine data, adjust by the confidence interval, and plot results}
+new.df = data.frame(new.x, new.y)
+
+new.df = mutate(
+  new.df,
+  fitness = exp(fit),
+  lwr = exp(fit - 1.96 * se.fit),
+  upr = exp(fit + 1.96 * se.fit)
+  )
+
+summary(new.df)
+
+
+plot = ggplot(
+  soay, 
+  aes(
+    x = body.size, 
+    y = fitness
+    )) +
+geom_point( size = 1.5,
+  alpha = 0.8,
+  shape = 1
+  ) +
+geom_smooth( # add the fits and CIs
+  data = new.df, 
+  aes(
+    ymin = lwr, 
+    ymax = upr), 
+  stat = 'identity',
+  se=FALSE,
+  color="firebrick",
+  linewidth = 0.5,
+  linetype = 5
+  ) +
+theme_bw()
+
+plot
+```
+
+
+
+
+
+

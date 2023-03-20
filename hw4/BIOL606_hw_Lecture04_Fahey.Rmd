@@ -1,0 +1,533 @@
+---
+title: "BIOL606_hw_Lecture04_Fahey.Rmd"
+author: "Sean Fahey"
+date: "2023-01-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(ggplot2)
+#library(lme4)
+#library(stargazer)
+library(ggfortify)
+```
+
+```{r question 1}
+# Import both data files, call them "cucumberdamage" and "flowercounts".
+
+flowercounts <- read.csv("lecture3_flowercounts.csv")
+flowercounts$plant <- as.factor(flowercounts$plant) # this converts the plant column from an integer to a factor datatype
+
+summary(flowercounts)
+head(flowercounts)
+
+cucumberdamage <- read.csv("lecture3_cucumberdamage.csv")
+cucumberdamage$plant <- as.factor(cucumberdamage$plant)
+
+summary(cucumberdamage)
+head(cucumberdamage)
+```
+
+```{r question 2}
+# Determine the total number (sum) of male and female flowers combined on each plant (i.e., total number of flowers, males + females).
+
+flowercounts = summarize(
+  group_by(flowercounts, plant),
+  sumF = sum(F),
+  sumM = sum(M),
+  sumTotal = sum(M) + sum(F)
+  )
+
+flowercounts = slice(flowercounts, 1:200) # summarize spits out an NA row at the end. This seems to get rid of it.
+
+tail(flowercounts)
+```
+
+``` {r question 3}
+# Join the total flower number count with the cucumberdamage dataframe
+
+combined = bind_cols(flowercounts, cucumberdamage)
+#combined$pollination <- as.factor(combined$pollination)
+#combined$herbivory <- as.factor(combined$herbivory)
+head(combined)
+```
+
+``` {r question 4}
+# Use a t-test to determine if the hand-pollination treatment affects flower number. In your annotation, explain how you interpret the result of the t-test (in your own words)
+
+t.test(combined$sumTotal ~ combined$pollination)
+
+# It looks like we can't reject the null hypothesis with 95% confidence (that there's no difference between pollination methods). So there isn't a statistical difference between the pollination methods.
+```
+
+``` {r question 5}
+# Make a figure in ggplot depicting flower number and pollination treatment
+
+ggplot(combined,
+       aes(
+         x=pollination,
+         y=sumTotal
+       )) +
+  geom_boxplot(
+    outlier.alpha = 0, # don't show my outliers, they'll show up in the geom_jitter plot
+    notch = TRUE, # add a notch
+    notchwidth = 0.8, # set notch width (default is 0.5)
+    na.rm = TRUE, # drop NA values so I don't get warnings
+  ) +
+  geom_jitter(
+    shape = 21,
+    size = 1,
+    position = position_jitter(0.05)
+  ) +
+  theme_bw() +
+  labs(
+    x = "Pollination Method",
+    y = "Total Number of Flowers",
+    title = "Flower Count by Pollination Method"
+  )
+```
+
+``` {r question 6}
+# On each plant, the lengths of 3 leaves were measured (leaf1length, leaf2length, leaf3length in the cucumberdamage dataframe). First, use dplyr to calculate mean leaf length of each plant. Then, test the hypothesis that hand-pollination decreases leaf size.
+
+# mutate to create a new column of mean leaf lengths
+combined = mutate(
+  combined, 
+  meanLeaf = (
+    leaf1length +  
+    leaf2length + 
+    leaf3length)
+  /3)
+
+t.test(combined$meanLeaf ~ combined$pollination)
+# It looks like we still can't reject the null hypothesis that pollination method has no effect on mean leaf length with at least 95% confidence.
+```
+
+``` {r question 7}
+# Make a ggplot illustrating the results of leaf length vs hand polliantion.
+
+ggplot(combined,
+       aes(
+         x=pollination,
+         y=meanLeaf
+       )) +
+  geom_boxplot(
+    outlier.alpha = 0, # don't show my outliers, they'll show up in the geom_jitter plot
+    notch = TRUE, # add a notch
+    notchwidth = 0.8, # set notch width (default is 0.5)
+    na.rm = TRUE, # drop NA values so I don't get warnings
+  ) +
+  geom_jitter(
+    shape = 21,
+    size = 1,
+    position = position_jitter(0.05)
+  ) +
+  theme_bw() +
+  labs(
+    x = "Pollination Method",
+    y = "Mean Leaf Length",
+    title = "Mean Leaf Length by Pollination Method"
+  )
+```
+
+# Beckerman ch 5
+``` {r get dataset ready}
+rm(list = ls())
+
+# import the data 
+lady <- read.csv("../Beckerman-datasets-master/ladybirds_morph_colour.csv")
+
+# Check it out 
+glimpse(lady)
+```
+
+```{r plotting}
+
+totals <- lady %>%
+  group_by(Habitat, morph_colour) %>%
+  summarise(total.number = sum(number))
+
+ggplot(
+  totals, 
+  aes(
+    x = Habitat, 
+    y = total.number, 
+    fill = morph_colour)) +
+geom_bar(
+  stat = 'identity', 
+  position = 'dodge'
+  )
+
+```
+
+```{r changing colors}
+
+ggplot(
+  totals, 
+  aes(
+    x = Habitat, 
+    y = total.number, 
+    fill = morph_colour
+    )) +
+  geom_bar(
+    stat =  'identity', 
+    position = 'dodge') +
+  scale_fill_manual(
+    values = c(black = "black", red = "red")
+    )
+```
+
+``` {r chi-squared test}
+
+lady.mat <- xtabs(number ~ Habitat + morph_colour, data = lady) 
+lady.mat
+
+chisq.test(lady.mat)
+```
+
+``` {r looking at chi-squared more}
+
+lady.chi <- chisq.test(lady.mat)
+names(lady.chi)
+```
+
+```{r load and plot ozone}
+ozone <- read.csv("../Beckerman-datasets-master/ozone.csv")
+
+glimpse(ozone)
+
+ggplot(
+  ozone, 
+  aes(x = Ozone)
+  ) +
+geom_histogram(
+  binwidth = 10
+  ) +
+facet_wrap(
+  ~ Garden.location, # different plots for location
+  ncol = 1
+  ) +
+theme_bw()
+```
+
+```{r t-test}
+t.test(Ozone ~ Garden.location, data = ozone) # y ~ x
+```
+
+```{r variance}
+var.test(Ozone ~ Garden.location, data = ozone) 
+```
+
+``` {r load and plot plant growth rate}
+plant_gr <- read.csv("../Beckerman-datasets-master/plant.growth.rate.csv")
+
+glimpse(plant_gr)
+
+ggplot(
+  plant_gr,
+  aes(
+    x = soil.moisture.content, 
+    y = plant.growth.rate)
+  ) +
+geom_point() +
+ylab(
+  "Plant Growth Rate (mm/week)"
+  ) +
+theme_bw()
+```
+
+```{r linear model plotting}
+# Fit a linear model, where we hypothesize that plant growth rate is a function of soil moisture content
+model_pgr <- lm(
+  plant.growth.rate ~ soil.moisture.content, 
+  data = plant_gr
+  )
+
+autoplot(model_pgr, smooth.colour = NA)
+```
+
+```{r summary}
+anova(model_pgr)
+summary(model_pgr)
+```
+
+```{r adding regression lines to original plot}
+
+ggplot(
+  plant_gr, 
+  aes(
+    x = soil.moisture.content, 
+    y = plant.growth.rate)
+  ) +
+geom_point() +
+geom_smooth(
+  method = 'lm'
+  ) +
+ylab(
+  "Plant Growth Rate (mm/week)"
+  ) +
+theme_bw()
+
+```
+
+``` {r load and plot daphnia}
+
+daphnia <- read.csv("../Beckerman-datasets-master/Daphniagrowth.csv")
+
+glimpse(daphnia)
+
+ggplot(
+  daphnia, 
+  aes(
+    x = parasite, 
+    y = growth.rate)
+  ) +
+geom_boxplot() +
+theme_bw()
+```
+
+```{r cordinate flipping}
+
+ggplot(
+  daphnia, 
+  aes(
+    x = parasite, 
+    y = growth.rate)
+  ) +
+geom_boxplot() +
+theme_bw() +
+coord_flip()
+
+```
+
+```{r plot the model}
+model_grow <- lm(growth.rate ~ parasite, data = daphnia) 
+autoplot(model_grow, smooth.colour = NA)
+```
+
+```{r annova and summary}
+anova(model_grow)
+summary(model_grow)
+```
+
+```{r}
+sumDat<-daphnia %>%
+  group_by(parasite) %>%
+  summarise(meanGR = mean(growth.rate))
+```
+
+# Beckerman ch 6
+
+```{r load dataset and inspect}
+growth.moo = read.csv("../Beckerman-datasets-master/growth.csv")
+glimpse(growth.moo)
+
+growth.moo$diet <- as.factor(growth.moo$diet) # convert to a factor for levels to work
+growth.moo$supplement <- as.factor(growth.moo$supplement) 
+
+levels(growth.moo$diet)
+levels(growth.moo$supplement)
+```
+
+```{r mean and sd}
+sumMoo <- growth.moo %>%
+  group_by(diet, supplement) %>%
+  summarise(meanGrow = mean(gain))
+
+sumMoo
+```
+
+```{r plot suppliment type vs weight}
+ggplot(
+  sumMoo, 
+  aes(
+    x = supplement, 
+    y = meanGrow)
+  ) +
+geom_point() +
+theme_bw()
+```
+
+```{r plot again with color}
+ggplot(
+  sumMoo, 
+  aes(
+    x = supplement, 
+    y = meanGrow, 
+    colour = diet, 
+    group = diet)
+  ) +
+geom_point() +
+geom_line() +
+theme_bw()
+```
+
+```{r linear model}
+model_cow <- lm(
+  gain ~ diet * supplement, 
+  data = growth.moo
+  )
+
+autoplot(model_cow, smooth.colour =NA)
+```
+
+```{r annova}
+anova(model_cow)
+```
+
+```{r summary}
+summary(model_cow)
+```
+
+```{r plot mean and sd}
+sumMoo <- growth.moo %>%
+  group_by(diet, supplement) %>%
+  summarise(
+  meanGrow = mean(gain),
+  seGrow = sd(gain)/sqrt(n())
+)
+
+ggplot(sumMoo, 
+   aes(
+      x = supplement, 
+      y = meanGrow, 
+      colour = diet, 
+      group = diet)
+   ) +
+geom_point() +
+geom_line() +
+geom_errorbar(
+  aes(
+    ymin = meanGrow - seGrow,
+    ymax = meanGrow + seGrow), 
+  width = 0.1) +
+theme_bw()
+```
+
+```{r limp dataset load and inspect}
+
+limp = read.csv("../Beckerman-datasets-master/limpet.csv")
+limp$SEASON <- as.factor(limp$SEASON) # convert to a factor for levels to work
+
+glimpse(limp)
+
+```
+
+``` {r start by plotting}
+ggplot(
+  limp, 
+  aes(
+    x = DENSITY, 
+    y = EGGS, 
+    colour = SEASON)
+  ) +
+geom_point() +
+scale_color_manual(
+  values = c(
+    spring="green", 
+    summer="red")
+  ) +
+theme_bw()
+
+```
+
+``` {r set up and inspect linear model}
+
+limp.mod <- lm(EGGS ~ DENSITY * SEASON, data = limp)
+names(limp.mod)
+summary(limp.mod)
+
+```
+
+``` {r plot linear model}
+autoplot(limp.mod, smooth.colour = NA)
+```
+
+```{r annova of lienar model}
+anova(limp.mod)
+```
+
+```{r expand grid}
+# sets up a grid with all possible options as rows
+expand.grid(FIRST = c("A", "B"), SECOND = c(1, 2))
+```
+
+```{r predict}
+predict(limp.mod) # predict number of eggs using our linear model
+```
+
+```{r predict using fake values of density and season}
+new.x <- expand.grid( # generate all possible combinations
+  DENSITY = seq( # set density to values 8 to 45, 10 values evenly spaced
+    from = 8, 
+    to = 45, 
+    length.out = 10),
+  SEASON = levels(limp$SEASON) # every value of season
+  )
+head(new.x)
+
+new.y <- predict(
+  limp.mod,
+  newdata=new.x,
+  interval = 'confidence')
+
+new.y
+```
+
+
+```{r combine into DF}
+new.data <- data.frame(new.x, new.y) # combine test data and predictions into new dataset
+new.data <- rename(new.data, EGGS = fit) # rename columns
+new.data
+```
+
+```{r predict using mean value of density}
+new.x2 <-expand.grid(
+  DENSITY = mean(limp$DENSITY), # using only the mean value of density
+  SEASON = levels(limp$SEASON)) # using both seasons
+
+predEgg <- predict(
+  limp.mod, 
+  newdata = new.x2) 
+
+EggAtMeanDens <- data.frame(new.x2, predEgg)
+
+head(EggAtMeanDens)
+```
+
+```{r plot it}
+ggplot(
+  limp, 
+  aes(
+    x = DENSITY, 
+    y = EGGS, 
+    colour = SEASON)
+  ) +
+  
+geom_point(size = 5) +
+  
+# now add the fits and CIs
+geom_smooth(
+  data = new.data, 
+  aes(
+    ymin = lwr, 
+    ymax = upr, 
+    fill = SEASON), 
+  stat = 'identity') +
+  
+scale_colour_manual( # adjusting colors
+  values = c(
+    spring="green", 
+    summer="red")
+  ) +
+scale_fill_manual(
+  values = c(
+    spring="green", 
+    summer="red")
+  ) +
+
+theme_bw()
+```

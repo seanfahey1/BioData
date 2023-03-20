@@ -1,0 +1,59 @@
+---
+title: "24 Feb in-class script"
+author: "Nick Barber"
+date: "2/24/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(lme4)
+library(tidyverse)
+```
+
+#Blocked design example, greenhouse experiment
+```{r}
+plantdata <- read.csv("blocked_experiment.csv")
+
+#quick look at the relationships between the DV and IVs, ignoring block:
+ggplant <- ggplot(plantdata, aes(x = damage, y = cat_mass)) +
+  geom_boxplot() +
+  facet_wrap(.~AMF)
+ggplant
+```
+
+```{r}
+#quick look at the variation among blocks. Note that there is lots!
+ggblock <- ggplot(plantdata, aes(x = block, y = cat_mass)) +
+  geom_boxplot()
+ggblock
+```
+
+```{r}
+
+library(nlme) #normally this would go up at the top in the {r setup} chunk
+
+#here's how we make the model using lme():
+blockmodel <- lme(cat_mass ~ AMF * damage, random = ~1|block, data = plantdata, method="ML")
+#the "random = ~1|block" part tells the lme function that the (categorical) variable block is being treated as the random intercept. 
+
+plot(blockmodel) #this produces the same as the first autoplot
+qqnorm(residuals(blockmodel)) #this produces the qqnorm like you see in the autoplot
+hist(resid(blockmodel)) #here's a way to just look at a historgram of the residuals to eyeball normality. Note that you can abbreviate "residuals" to "resid" and it still works, so you don't spent hours typing those four extra characters. Can you imagine unnecessarily typing that many extra words in your R code? That would be a crazy thing for a person to do. 
+
+# we have a lovely balanced design, so little-a anova works fine:
+anova(blockmodel)
+
+#summary produces the familiar summary table, which you can use to see the slopes & intercepts, although in this case it's the intercept and differences-of-intercepts because we only have categorical IVs. 
+summary(blockmodel)
+
+#another approach to evaluating your fixed factors is to test each factor one at a time, using likelihood ratio tests. This is used fairly commonly, but it still has the challenge of deciding which order to test things. As a rule, interactions get tested before main effects, but otherwise it's up to you to decide the order.
+
+#likelihood ratio approach - manually testing each fixed factor
+blockmodel2 <- update(blockmodel, ~.-AMF:damage) #this is a shortcut to running the next line of code. They do the same thing. 
+blockmodel2 <- lme(cat_mass ~ AMF + damage, random = ~1|block, data = plantdata, method="ML") #this does the exact same thing as the previous line of code. They both produce a new model that is just like the earlier one but has the interaction removed.
+
+#then you can perform the likelihood ratio test, which compares the two models. If they are significantly different, that is evidence that the thing you took out (in this case, the AMF:damage interaction, is important for explaining variation in your DV. A model that *doesn't* have the interaction isn't as good. In other words, the interaction is significant.)
+anova(blockmodel,blockmodel2) 
+#one school of thought here is that, if you have a significant interaction, you stop and don't test the main effects. That is, you report the interaction, interpret it in terms of effect sizes, and draw your conclusions. Take a look at the slide I gave you where I suggest how you might report this in the methods and results. 
+
+```
