@@ -6,17 +6,20 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-
-
+library(ggplot2)
+library(car)
+library(psych)
+library(plotly)
 ```
+
 
 
 ```{r import data}
 gut = read.csv("gut_diversity.csv", header=TRUE)
 
-gut$age <- scale(gut$age)
-gut$exercise <- scale(gut$exercise)
-gut$weight <- scale(gut$weight)
+gut$age = scale(gut$age)
+gut$exercise = scale(gut$exercise)
+gut$weight = scale(gut$weight)
 
 gut$subject = as.factor(gut$subject)
 summary(gut)
@@ -24,16 +27,20 @@ summary(gut)
 
 ## In Class Work
 
-Ancova is anova plus regression analysis
+Ancova is anova plus regression analysis.
 
-Fit a linear model using lm(), with both IVs but no interaction. Look at the intercept and slopes.
-```{r }
+Fit a linear model using lm(), with both IVs but no interaction. Look at the 
+intercept and slopes.
+
+```{r 2 IVs with no interactions}
 model.both_iv = lm(diversity ~ age + exercise, data=gut)
 summary(model.both_iv)
 ```
 
-Fit a separate simple linear regression model using lm() for each IV. Compare the intercept and slopes to the multiple regression model.
-```{r 2 IV with no interactions}
+Fit a separate simple linear regression model using lm() for each IV. Compare 
+the intercept and slopes to the multiple regression model.
+
+```{r 2 IVs assessed independantly}
 model.age_only = lm(diversity ~ age, data=gut)
 model.exercise_only = lm(diversity ~ exercise, data=gut)
 
@@ -41,28 +48,108 @@ summary(model.age_only)
 summary(model.exercise_only)
 ```
 
+Intercept is same for both. Slope changes.
 
-```{r }
 
+Simple linear regression of diversity (DV) on weight (IV). Look at 
+significance, either with summary() or anova()
+```{r weight assessed independantly}
+model.weight_only = lm(diversity ~ weight, data=gut)
+summary(model.weight_only)
+```
+
+Multiple linear regression of diversity (DV) on exercise (IV1) and weight 
+(IV2), no interaction. Look at significance of weight now. 
+```{r exercise and weight, no interaction}
+model.ex_wt = lm(diversity ~ weight + exercise, data = gut)
+summary(model.ex_wt)
+```
+Adding exercise changed the contribution of weight significantly. Looks like
+exercise complicated things a bit.
+
+
+Plot weight v. exercise to see what's going on.
+```{r plot weight v. exercise}
+
+ggplot(
+  data=gut,
+  aes(
+    x = weight,
+    y = exercise
+    )
+  ) + 
+  geom_point()
+
+cor(gut$weight, gut$exercise)
+```
+Looks like there's a correlation between the 2 IVs. That explains what we're
+seeing with the diminished effect of weight.
+
+One option: just drop one of the variables.
+Another option: model the interaction
+
+```{r quick distraction on plotting}
+# pairs just shows a plot of each variable against each other. Sort of
+# nice for quick visualization.
+pairs(~age+exercise+weight, data=gut)
+
+# pairs.panels (relies on psych package, can't handle ~ inputs) is also cool!
+pairs.panels(gut[ ,3:5])
 
 ```
 
 
-```{r }
+## Homework 10a
 
-
-```
-
-
-```{r }
-
+Fit the gut OTU Shannon diversity model with an interaction (DV = diversity, 
+IV = age, exercise, and their interaction).
+```{r question 1, fit model with interaction}
+model.age.ex = lm(diversity ~ age * exercise, data=gut)
 
 ```
 
 
-```{r }
+Test the IVs. There is an interaction, so type III Anova() would probably be 
+best so age * exercise doesn't give different results than exercise * age… 
+But good news, if ALL your IVs are continuous, you don't have to worry about 
+changing the contrasts statement.
+  - type III Anova() and summary() give same p-values
+  - anova() is still order-dependent unless perfectly balanced (very unlikely 
+  with continuous IVs)
+
+```{r question 2, test the IVs}
+Anova(model.age.ex, type=3)
+summary(model.age.ex)
+```
+
+I know the interaction is not significant, but pretend that it is. How would 
+you describe, in words (not numbers) the OTU diversity relationship with age 
+and exercise? Include your description in the text of your Rmd file.
+
+Question 3:
+Gut microbe diversity has a string, positive correlation with exercise. There
+is no statistically significant correlation between age and microbe diversity
+or between microbe diversity and the interaction between age and exercise.
 
 
+It is hard to plot when you have >1 continuous IV. Try to come up with a way 
+to do this. 
+
+```{r question 4, r plotly 3D scatter plot}
+# reloading the gut data set because sclae is somehow breaking it for plotly.
+gut2 = read.csv("gut_diversity.csv", header=TRUE)
+
+fig <- plot_ly(
+  type="scatter3d",
+  mode="markers",
+  gut2,
+  x = ~exercise, 
+  y = ~weight, 
+  z = ~diversity,
+  color = ~age
+  )
+
+fig
 ```
 
 
