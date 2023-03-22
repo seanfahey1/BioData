@@ -6,88 +6,334 @@ output: html_document
 ---
 
 ```{r setup}
-
-
+library(car)
+library(ggfortify)
+library(MuMIn)
 
 ```
 
-
-
+# In-Class
 ```{r get dataset}
-mass = read.csv("~/Downloads/offspring_mass.csv", header=TRUE)
-mass$plant = as.factor(mass$plant)
+birdmass = read.csv("~/Downloads/offspring_mass.csv", header=TRUE)
+birdmass$plant = as.factor(birdmass$plant)
+
+head(birdmass)
+```
+
+### One model at a time for now
+
+Fit a linear model (lm) of offspring_mass against all of the other variables 
+at once, no interactions. Verify the IVs are not highly correlated, and 
+examine the residuals to assess model assumptions.
+```{r set up first model}
+lm.all_no_interactions = lm(
+  offspring_mass ~ 
+    dist_edge + 
+    feedings_per_day + 
+    canopy_cover + 
+    height + 
+    plant,
+  data=birdmass
+  )
+
+pairs(~dist_edge + 
+        feedings_per_day + 
+        canopy_cover + 
+        height + 
+        plant, 
+      data=birdmass
+    )
+
+vif(lm.all_no_interactions)
+
+autoplot(lm.all_no_interactions)
+```
+
+- Nothing looks super correlated from the 'pairs' graph. 
+
+- vif (from car library) also shows no strong correlations (no 
+multi-colinearity). GVIF around 1 is fine, 3-5 is not great, >5 is super 
+multi-colinearity.
+
+- Residuals look fine. 
+
+Then use summary() to look at the slopes and intercepts.
+```{r summarize first model}
+summary(lm.all_no_interactions)
 
 ```
 
 
+Next fit the same model, but use glm() instead of lm(). Look at the slopes and
+intercepts of this model. 
+```{r glm of first model}
+glm.all_no_interactions = glm(
+  offspring_mass ~ 
+    dist_edge + 
+    feedings_per_day + 
+    canopy_cover + 
+    height + 
+    plant,
+  data=birdmass
+  )
 
-```{r}
+summary(glm.all_no_interactions)
+```
+coefficients (Estimate) are the same as the lm. But now we have Null deviance,
+Residual deviance, and AIC table at the bottom.
 
+How can we get the AIC down? Try different models and see if we find a lower
+AIC value.
+
+
+drop is a way to compare how the model might be simplified:
+this reruns the model once per term, dropping one term at a time.
+Each row is the model AIC and Deviance with that term removed.
+```{r drop 1}
+drop1(glm.all_no_interactions)
+
+```
+
+Dropping plant drops AIC to 510. Dropping feedings_per_day actually makes the
+model worse (increases AIC to 529). Makes sense, because feedings_per_day was
+the only IV with good correlation.
+
+```{r removing a term}
+glm.no_plant = glm(
+  offspring_mass ~ 
+    dist_edge + 
+    feedings_per_day + 
+    canopy_cover + 
+    height,
+  data=birdmass
+  )
+
+summary(glm.no_plant)
+
+drop1(glm.no_plant)
+```
+Let's drop canopy_cover this time
+
+
+```{r removing a second term}
+glm.no_plant_canopy = glm(
+  offspring_mass ~ 
+    dist_edge + 
+    feedings_per_day + 
+    height,
+  data=birdmass
+  )
+
+summary(glm.no_plant_canopy)
+
+drop1(glm.no_plant_canopy)
 
 ```
 
 
+Now let's drop dist_edge
+```{r removing a third term}
+glm.feedings.height = glm(
+  offspring_mass ~ 
+    feedings_per_day + 
+    height,
+  data=birdmass
+  )
 
-```{r}
+summary(glm.feedings.height)
 
-
-```
-
-
-
-```{r}
-
-
-```
-
-
-
-```{r}
-
+drop1(glm.feedings.height)
 
 ```
 
 
+Now drop height:
+```{r highest AIC model}
+glm.feedings = glm(
+  offspring_mass ~ 
+    feedings_per_day,
+  data=birdmass
+  )
 
-```{r}
+summary(glm.feedings)
 
+drop1(glm.feedings)
+
+```
+A note on dropping stuff:
+
+- In the real world, it's never really worth dropping terms if AIC only improves 
+by 1 or 2. Maybe worth it for > 5, probably worth it for > 10.
+- Be careful dropping things for no reason. The data was collected for a
+reason. Don't throw out the hypothesis just to get a model that's slightly
+better. That's bad data science.
+- Another aproach: start with a simple model and slowly add terms. Go the other
+direction to arrive at basically the same result.
+
+("Reverse stepwise": start with a full model with all the IVs you are 
+considering, and drop them one by one until you get a "good" model. 
+
+"Stepwise": start with a null model (just an intercept) and add potential IVs 
+in until you have a "good" model.)
+
+From the Hajduk dragons blog:
+
+"Generally, if models are within 2 AICc units of each other they are very 
+similar. Within 5 units they are quite similar, over 10 units difference and 
+you can probably be happy with the model with lower AICc. As with p-values 
+though, there is no “hard line” that’s always correct.
+
+
+### Model averaging
+1. Make a model for every possible combination of variables
+2. Compare all these models to each other
+3. "Average out" which variables are most important
+```{r Model averaging setup with dredge}
+glm.all = glm(
+  offspring_mass ~ 
+    dist_edge + 
+    feedings_per_day + 
+    canopy_cover + 
+    height + 
+    plant,
+  data=birdmass,
+  na.action=na.fail
+  )
+
+allmodels = dredge(glm.all) # dredge is from MuMIn package
+
+allmodels
+```
+Dredge makes a model for every possible combo of IVs, and averages the results.
+Uses AICc instead of AIC, which is a normalized AIC value. Slightly different,
+and necessary when comparing models like this.
+
+Best model is feedings_per_day only. Second best is feedings_per_day with 
+height. Same results I got above.
+
+The actual model averaging: start by averaging ALL models
+```{r averaging models}
+avgmodel <- model.avg(allmodels) #uses MuMIn to do averaging
+summary(avgmodel)
 
 ```
 
 
+Conditionally average models IF AIC is within 5 of the best AIC model:
+```{r conditional model averaging}
+model.all_5 = model.avg(allmodels, subset = delta < 5) #"conditional model averaging"
+summary(model.all_5)
+```
+summary output is cleaner now which is nice.
 
-```{r}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Homework
+
+### Multimodel Inference
+
+A possible better approach:
+
+1. Think hard to come up with multiple hypotheses based on your biological
+knowledge.
+2. Build a single model for each of these hypotheses.
+3. Compare the models to each other to see which is the "best" model, i.e., 
+the "best" hypothesis.
+
+
+### Question 1
+Draw on your extensive personal knowledge of bird nesting biology to come up
+with 3 hypotheses about how the explanatory variables might affect nestling
+bodymass. The hypotheses can have one or more IVs (try to come up with a mix).
+State these biologically, e.g., "Bird nests that are higher off the ground and 
+closer to a forest edge will be exposed to increased sunlight, and the heat 
+stress will reduce nestling bodymass." 
+
+Hypothesis 1:
+Baby birds that are fed more frequently will have havehigher caloric intake 
+and increase in mass faster. Additionally, birds that nest higher from the 
+ground will face less stress from ground-based predators which might interrupt 
+feeding or remove food from the nest during feeding time. There are no logical 
+interactions between any of these 2 variables.
+
+Hypothesis 2:
+Baby bird mass only depends on feeding frequency. Birds that are fed more often
+will grow larger than birds that are fed less often.
+
+Hypothesis 3:
+Baby bird mass increases as feeding frequency increases. Additionally baby 
+bird mass decreases as nest height increases and distance to the forest edge
+decreases. There is also an interaction component between forest edge distance
+and nest height.
+
+### Question 2
+Build a glm() model for each hypothesis and save it as an object, e.g., modA,
+modB, modC, etc. Also build a model with only an intercept (~ 1) as the IV.
+
+```{r question 2}
+hyp1.model = glm(
+  offspring_mass ~ 
+    feedings_per_day + 
+    height,
+  data=birdmass,
+  na.action=na.fail
+  )
+
+hyp2.model = glm(
+  offspring_mass ~ 
+    feedings_per_day,
+  data=birdmass,
+  na.action=na.fail
+  )
+
+hyp3.model = glm(
+  offspring_mass ~ 
+    feedings_per_day + 
+    dist_edge *
+    height,
+  data=birdmass,
+  na.action=na.fail
+  )
+
+intercept.model = glm(
+  offspring_mass ~ 
+    1,
+  data=birdmass,
+  na.action=na.fail
+  )
 
 ```
 
 
-
-```{r}
-
-
+### Question 3
+Compare these models:
+```{r question 3}
+Cand.mods = list(hyp1.model, hyp2.model, hyp3.model, intercept.model)
+aictab = model.sel(Cand.mods)
+aictab
 ```
 
+### Question 4
+Draw conclusions from the model selection output. Which of your hypotheses 
+is/are best supported?
 
-
-```{r}
-
-
-```
-
-
-
-```{r}
-
-
-```
-
-
-
-```{r}
-
-
-```
-
-
-
+Hypothesis 2 is best supported (with an AICc of 506.9), with hypothesis 1 being
+almost the same but slightly worse (AICc = 507.8, delta-0.86). This value is 
+close enough that the models are roughly the same. Hypothesis 3 is slightly 
+worse (AICc=510.6, delta=3.63), and the intercept only model is significanly
+worse than hypothesis 2 (delta=15.86).
