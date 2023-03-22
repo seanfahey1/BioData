@@ -1,0 +1,93 @@
+---
+title: "HW11"
+author: "Sean Fahey"
+date: "2023-03-22"
+output: html_document
+---
+
+```{r setup}
+
+
+
+```
+
+
+
+```{r get dataset}
+mass = read.csv("~/Downloads/offspring_mass.csv", header=TRUE)
+mass$plant = as.factor(mass$plant)
+
+```
+
+
+
+```{r}
+
+
+```
+
+
+
+```{r}
+
+
+```
+
+
+
+```{r}
+
+
+```
+
+
+
+```{r}
+
+
+```
+
+
+
+```{r}
+
+
+```
+
+
+
+```{r}
+
+
+```
+
+
+
+```{r}
+
+
+```
+
+
+
+```{r}
+
+
+```
+
+
+
+```{r}
+
+
+```
+
+
+
+```{r}
+
+
+```
+
+
+
