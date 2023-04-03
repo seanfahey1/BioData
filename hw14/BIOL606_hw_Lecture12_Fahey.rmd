@@ -5,26 +5,175 @@ date: "2023-04-03"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup}
+library(ggplot2)
+
 ```
 
-## R Markdown
+# In-Class
+```{r get dataset}
+chimp = read.csv("ChimpBrains.csv", header=TRUE)
+chimp$chimpName = as.factor(chimp$chimpName)
+chimp$sex = as.factor(chimp$sex)
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+ragweed = read.csv("Ragweed.csv", header=TRUE)
+ragweed$ID = as.factor(ragweed$ID)
+ragweed$Site = as.factor(ragweed$Site)
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+snail = read.csv("SnailGrowth.csv", header=TRUE)
+snail$Temperature = as.factor(snail$Temperature)
+snail$Crab = as.factor(snail$Crab)
 
-```{r cars}
-summary(cars)
+summary(ragweed)
 ```
 
-## Including Plots
+### Permutation analysis
 
-You can also embed plots, for example:
+In ragweed data set we have 2 groups and we want to decide if they're 
+different; "roadcut" and "protected" (Site). 
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+Step 1, decide test statistic:
+
+- |mean(Roadcut) - mean(Protected)| works well. We get 3.6 here.
+  
+Step 2, generate a null distribution:
+
+- Figure out what it would look like if site type didn't matter.
+- We expect Null distribution to cluster around 0, but not be exactly 0.
+- Randomly re-sample/shuffle the data into "roadcut" and "protected" (just 
+shuffle the Biomass column basically). Calculate the difference using the 
+formula from above.
+- Re-do the shuffle, get another value. Do this until we have 10,000 values.
+- This tells us what to expect if only sampling error causes the difference
+between groups.
+
+```{r calculate observed means}
+ragmean = aggregate(Biomass~Site, data=ragweed, FUN = mean)
+ragdiff = abs(ragmean$Biomass[1] - ragmean$Biomass[2])
+
+print(ragmean)
+print(ragdiff)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
