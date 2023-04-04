@@ -6,8 +6,10 @@ output: html_document
 ---
 
 ```{r setup}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
 library(ggplot2)
-
+library(boot)
+library(tidyr)
 ```
 
 # In-Class
@@ -19,10 +21,6 @@ chimp$sex = as.factor(chimp$sex)
 ragweed = read.csv("Ragweed.csv", header=TRUE)
 ragweed$ID = as.factor(ragweed$ID)
 ragweed$Site = as.factor(ragweed$Site)
-
-snail = read.csv("SnailGrowth.csv", header=TRUE)
-snail$Temperature = as.factor(snail$Temperature)
-snail$Crab = as.factor(snail$Crab)
 
 summary(ragweed)
 ```
@@ -47,6 +45,15 @@ formula from above.
 - This tells us what to expect if only sampling error causes the difference
 between groups.
 
+Step 3, decide on a one tailed or two tailed test
+
+- Do extremes only show up on one side? For this, yes.
+- Figure out where the p=0.05 area falls. For one tailed test, this is the
+furthest right or left 5% of the area in a histogram. For a 2-tailed, this
+would be the furthest 2.5% on each side.
+- Take the 10,000 values, put them in order, get the 95th percentile.
+
+
 ```{r calculate observed means}
 ragmean = aggregate(Biomass~Site, data=ragweed, FUN = mean)
 ragdiff = abs(ragmean$Biomass[1] - ragmean$Biomass[2])
@@ -56,124 +63,278 @@ print(ragdiff)
 ```
 
 
+```{r add the result to a vector}
+# vector is a data store similar to a column in a data frame. Preset length.
+absdiffs = vector(mode='numeric', length=10000)
+absdiffs[1] = ragdiff
+```
 
-```{r}
 
+```{r get null distribution}
+for (x in 1:10000) {
+  # sample shuffles the selected column
+  ragweed.shuffled = data.frame(
+    Site=ragweed$Site, 
+    
+    Biomass=sample(
+      ragweed$Biomass, 
+      size=nrow(ragweed), 
+      replace=FALSE,
+      )
+    )
+  
+  ragmean = aggregate(
+    Biomass~Site, 
+    data=ragweed.shuffled, 
+    FUN = mean,
+    )
+  
+  ragdiff.shuffled = abs(ragmean$Biomass[1] - ragmean$Biomass[2])
+  
+  absdiffs[x] = ragdiff.shuffled
+}
+
+mean(absdiffs)
+ragdiff
+```
+
+
+```{r quick plot}
+plot = ggplot(
+  ) + 
+  aes(
+    absdiffs
+  ) + 
+  geom_histogram(
+    bins=20,
+    colour="black", 
+    fill="lightblue",
+  ) +
+  theme_minimal()
+
+plot
+```
+
+
+```{r find the 95th percentile for p 0.05}
+absdiffs.sorted = sort(absdiffs)
+absdiffs.sorted[9501]
+```
+Our value is 3.6, the point just past the 95th percentile is 2.667 in the run
+I did. So our p-value is going to be under 0.05.
+
+```{r calculate p value}
+# sums the true/false values of the statement. True = 1, False = 0
+sum(absdiffs >= ragdiff)
+sum(absdiffs < ragdiff)
+```
+63 values are above our abs diff value, 9937 are below. So the p-value is 
+63/10,000 = 0.0063.
+
+
+### Bootstrapping
+
+Chimp data set has the asymmetry score of brain masses from each hemisphere
+of the brain. Basically, is there more thinkin' stuff on the left side or the 
+right side.
+
+Bootstrap:
+
+- Take a random sample <b>with replacement</b>
+- Calculate the median of the new sample
+- Calculate standard error
+
+```{r get original median, do setup}
+asymmetry.median = median(chimp$asymmetryScore)
+chimp.medians = vector(mode='numeric', length=10000)
+chimp.medians[1] = asymmetry.median
+
+asymmetry.median
+```
+
+
+```{r bootstrap by hand}
+for (x in 2:10000) {
+  chimp.sample = sample(chimp$asymmetryScore, size=nrow(chimp), replace=TRUE)
+  chimp.medians[x] = chimp.sample
+}
+```
+
+
+```{r median mean and confidence intervals}
+asymmetry.median
+mean(chimp.medians)
+median(chimp.medians)
+chimp.medians.sorted = sort(chimp.medians)
+chimp.medians.sorted[250] # lower 95% confidence interval
+chimp.medians.sorted[9750] # upper 95% confidence interval
+```
+
+
+```{r setup function for bootstrap}
+bootstrap_function = function(x,i) {
+  sample = x[i]
+  
+  sample_median = median(sample)
+  sample_variance = var(sample)
+  
+  return(c(sample_median, sample_variance))
+}
 ```
 
 
 
-```{r}
+```{r Bootstrap using boot library}
+chimp.bootstrap = boot(
+  data = chimp$asymmetryScore, 
+  statistic = bootstrap_function,
+  R = 9999, # number of re-samples
+  )
+chimp.bootstrap
+```
 
+t1 and t2 are the two outputs the function gave.
+
+
+```{r adding confidence interval to bootstrap}
+# boot.ci uses the bootstrap values to get a confidence interval.
+chimp.bootstrap.ci = boot.ci(chimp.bootstrap, conf = 0.95)
+chimp.bootstrap.ci
+
+```
+95% confidence intervals for Normal, Basic, Studentized, Percentile, and BCa. 
+Each is a bit different. Percentile is like how we did it by hand (sort and
+index the value we want).
+BCa (Bias Corrected accelerated) is what people usually publish.
+
+# Homework
+### Task 1
+
+- Using only the data for the ‘hot’ temperature treatment, compare the shell 
+growth of the Crab and No-Crab treatment levels, using a permutation routine.
+- Your code should load the data, carry out 9999 permutations (+1 original 
+value), calculate the permuted difference in medians, and 95% confidence 
+interval derived from the permuted differences.
+
+- Is the observed difference in median growth of the two groups significantly 
+different than what we would expect by random chance (i.e. if the two groups 
+weren’t different)? Write your answer in your .Rmd file.
+
+```{r load dataset}
+snail_clean = read.csv("SnailGrowth.csv", header=TRUE)
+snail_clean = drop_na(snail_clean)
+```
+
+
+```{r setup part 1}
+snail = snail_clean[snail_clean$Temperature == "hot",]
+head(snail)
+hist(snail$ShellGrowth.mg)
+```
+This is skewed one direction, so we'll use a one-tailed confidence interval.
+(Other than some weird outlier snail that lost it's shell or something.)
+
+
+```{r setup permutations}
+snailmedians = aggregate(
+  ShellGrowth.mg~Crab, 
+  data=snail, 
+  FUN=median
+  )
+
+snailmedian.diff = abs(
+  snailmedians$ShellGrowth.mg[1] - 
+  snailmedians$ShellGrowth.mg[2]
+  )
+
+snail.diffs = vector(mode='numeric', length=10000)
+snail.diffs[1] = snailmedian.diff
+
+snailmedian.diff
+```
+
+
+```{r permutations}
+for (x in 2:10000) {
+  # sample shuffles the selected column
+  snail.shuffled = data.frame(
+    Crab=snail$Crab,
+    
+    ShellGrowth.mg=sample(
+      snail$ShellGrowth.mg, 
+      size=nrow(snail), 
+      replace=FALSE,
+      )
+    )
+
+  snailmedians.shuffled = aggregate(
+    ShellGrowth.mg~Crab, 
+    data=snail.shuffled, 
+    FUN=median
+  )
+
+  snailmedian.diff.shuffled = abs(
+    snailmedians.shuffled$ShellGrowth.mg[1] - 
+    snailmedians.shuffled$ShellGrowth.mg[2]
+    )
+  
+  snail.diffs[x] = snailmedian.diff.shuffled
+}
 ```
 
 
 
-```{r}
+```{r confidence intervals}
+# original difference median
+snailmedian.diff
 
+# 95% confidence intervals
+sort(snail.diffs)[9500] # one tail because of the plot above
+```
+The observed difference in median growth is significantly different than
+expected from random chance. Our 95% confidence interval (p=0.05) cuts off
+at 7.7275, but the median observed difference is 13.9095.
+
+### Task 2
+
+- Use the boot() and boot.ci() functions to estimate the mean shell growth 
+and BCa 95% confidence intervals for the Ambient temperature, No-Crab 
+treatment group, based on 9999 re-samples.
+- Your code should print out the observed mean and BCa 95% confidence 
+intervals
+
+```{r setup part 2}
+snail = snail_clean[snail_clean$Temperature == "ambient",]
+snail = snail[snail$Crab == "no crab",]
+
+observed_mean = mean(snail$ShellGrowth.mg)
 ```
 
 
+```{r setup function 2 for bootstrap}
+bootstrap_function2 = function(x,i) {
+  sample = x[i]
+  sample_mean = mean(sample)
 
-```{r}
-
+  return(sample_mean)
+}
 ```
 
 
-
-```{r}
-
+```{r bootstrap}
+snail.bootstrap = boot(
+  data = snail$ShellGrowth.mg, 
+  statistic = bootstrap_function2,
+  R = 9999, # number of resamples
+  )
+snail.bootstrap
 ```
 
 
-
-```{r}
-
+```{r bootstrap ci}
+print(observed_mean)
+snail.bootstrap.ci = boot.ci(snail.bootstrap, conf = 0.95, type='bca')
+snail.bootstrap.ci
 ```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
+This time we fall within the confidence interval. This is expected because 
+we're just running the bootstrap on a single group (ambient temp, no crab).
