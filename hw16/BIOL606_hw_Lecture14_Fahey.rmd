@@ -1,0 +1,278 @@
+---
+title: 'BIOL606_hw_Lecture14_Fahey'
+author: "Sean Fahey"
+date: "2023-04-10"
+output: html_document
+---
+
+
+```{r setup}
+library(ggplot2)
+library(factoextra)
+library(ggfortify)
+```
+
+
+# In Class Work
+
+Doing PCA analysis on the USairpollution dataset.
+
+### Import and inspect data
+```{r import data}
+air = read.csv("USairpollution.csv", header=TRUE)
+pg = read.csv("pgfull.txt", header=TRUE, sep="\t")
+```
+
+
+```{r look at dataset}
+head(air)
+```
+Trying to understand what correlates with increased SO2 concentration.
+
+We could use all of these as predictors. But some of these might be 
+correlated. Let's check.
+
+```{r find correlations}
+# exclude columns 1, 8, and 9
+pairs(air[,c(-1,-8,-9)], lower.panel = NULL)
+?pairs
+```
+Manu and popul are pretty correlated. Also precip/predays and precip/negtemp
+are pretty correlated.
+
+### PCA
+
+```{r set up PCA}
+air.pca = prcomp(air[,c(-1,-8,-9)], center=TRUE, scale=TRUE)
+summary(air.pca)
+```
+PC1 explains 36.6% of the variation. But each subsequent value explains  less
+and less. The first 3 principal components explain ~85% of the variation.
+
+PC1, PC2, and PC3 could be used new variables in a regression to make an
+easier model that would still be pretty good.
+
+Here's a way to plot the amount of variance contained in each component.
+```{r scree plot}
+screeplot(air.pca)
+```
+
+
+```{r looking directly at PCA output}
+air.pca
+```
+We can see which variables are most important for each principal component.
+For example: PC3 is made up mostly of negtemp, precip, and popul, with a bit
+of manu and wind, and very little input from predays.
+
+How is PC3 calculated then??
+
+>PC3 = -0.27288633(manu) - 0.35037413(popul) + 0.29725334(wind) - 
+0.50456294(precip) + 0.09308852(predays) + 0.67168611(negtemp)
+
+### Plotting/visualization
+```{r biplot}
+biplot(air.pca, cex = c(1, 1.3), xlab = "PC1", ylab = "PC2")
+```
+Hard to see. But shows relative variation present for each variable. Things
+more important for PC1 show arrows running further along the x axis, PC2 on
+y axis.
+
+```{r correlation plot}
+fviz_pca_var(air.pca)
+```
+Another way to show arrows. A bit clearer.
+
+
+```{r using factoextra package to see coordinates}
+var = get_pca_var(air.pca)
+var$coord
+```
+
+```{r prettier plotting example}
+autoplot(
+  air.pca, 
+  data = air, 
+  colour = 'Region', 
+  loadings=TRUE, 
+  size = 3, 
+  loadings.label = TRUE, 
+  loadings.label.size=5
+  ) 
+
+```
+
+
+```{r add names}
+autoplot(
+  air.pca, 
+  data = air, 
+  colour = 'Region', 
+  loadings=TRUE, 
+  size = 3, 
+  loadings.label = TRUE, 
+  loadings.label.size=5, 
+  label=TRUE,
+  label.label = 'City',
+  label.vjust = -0.4
+  ) 
+```
+
+
+```{r add elipsis}
+fviz_pca_ind(
+  air.pca,
+  col.ind = air$Region, 
+  addEllipses = TRUE,
+  mean.point = TRUE,
+  ellipse.type = 'confidence'
+  )
+```
+
+### Using PCA for a regression
+
+```{r linear model using PCA results instead of normal predictors}
+# set up the principal components
+air.pca = prcomp(
+  air[,c(-1,-8,-9)],
+  center=TRUE,
+  scale.=TRUE)
+
+# get the values
+scores = air.pca$x
+
+# set up model (SO2 v. the PCA scores we calculated)
+model = lm(SO2~scores, data = air)
+
+summary(model)
+```
+
+### PCA example 2
+
+```{r setting up PCA 2}
+# Subset out only the species biomass data
+pgd = pg[,1:54]
+
+pg.pca = prcomp(pgd, scale=TRUE)
+summary(pg.pca)
+```
+
+
+```{r scree plot 2}
+screeplot(pg.pca)
+```
+When you have a lot of components, it doesn't print them all
+
+```{r plot 2}
+autoplot(
+  pg.pca, 
+  data = pgd, 
+  loadings=TRUE, 
+  size = 3, 
+  label=TRUE, 
+  alpha=0,
+  loadings.label = TRUE, 
+  loadings.label.size=5)
+```
+
+### plotting components against the original predictor varaibles
+```{r PC1 v. predictor varaibles}
+
+yv <- predict(pg.pca)[,1] # PC1
+plot(pg$hay,
+     yv,
+     pch=16,
+     xlab="hay biomass",
+     ylab="PC 1",
+     col="red")
+
+yv1 <- predict(pg.pca)[,1] # PC1
+plot(pg$pH,
+     yv1,
+     pch=16,
+     xlab="soil pH",
+     ylab="PC 1",
+     col="blue")
+
+yv2 <- predict(pg.pca)[,2] # PC2
+plot(pg$pH,
+     yv2,
+     pch=16,
+     xlab="soil pH",
+     ylab="PC 2",
+     col="green")
+
+```
+Correlation between hay biomass and PC1. No correlation between soil pH and 
+PC1. Strong negative correlation between soil pH and PC2.
+
+
+# Homework
+
+Notes:
+- Write code to load the sparrow data
+- Treat column 1 (‘survive’ 0 or 1) as the response, don’t include it in the 
+PCA1. 
+
+
+Problems:
+1. Produce a pairs plot of the various bird traits
+2. Fit a PCA, using centered and scaled trait data. Show the summary output
+for the PCA
+3. Produce a scree plot
+4. Produce a biplot using the ggfortify package autoplot() function, showing
+the birds colored by survival, and arrows showing the variables in the PCA.
+Make sure your Rmd file knits successfully (hit the Knit button at the top of
+the script window)
+
+```{r load sparrow dataset}
+sparrow = read.csv("bumpus.dat.txt", header=TRUE, sep="\t")
+head(sparrow)
+```
+
+
+```{r question 1}
+# Produce a pairs plot of the various bird traits
+
+pairs(sparrow[,c(-1)], cex = 0.5, pch = 20, lower.panel=NULL)
+
+```
+There's pretty clear correlation between "lhum" and "lfem", "lhum" and 
+"ltbio", and "lfem" and "ltbio".
+
+```{r question 2}
+# Fit a PCA, using centered and scaled trait data. 
+# Show the summary output for the PCA
+
+sparrow.pca = prcomp(sparrow[,c(-1)], center=TRUE, scale=TRUE)
+summary(sparrow.pca)
+```
+75% of the variation is explained by the first 4 principal components. But 
+principal component 1 explains a full 40.78% of the variance on it's own.
+
+```{r question 3}
+# Produce a scree plot
+
+screeplot(sparrow.pca)
+```
+
+
+```{r question 4}
+# Produce a biplot using the ggfortify package autoplot() function, showing
+# the birds colored by survival, and arrows showing the variables in the PCA.
+
+autoplot(
+  sparrow.pca, 
+  data = sparrow, 
+  colour = 'survive', 
+  loadings=TRUE, 
+  size = 4,
+  shape = 20,
+  loadings.label = TRUE, 
+  loadings.label.size=4,
+)
+```
+
+Light blue is survived = 1, dark blue is survived = 0.
+lbh has the least contribution to PC1, while lkeel has the least contribution 
+to PC2. 
