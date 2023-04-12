@@ -12,6 +12,7 @@ library(ggplot2)
 library(factoextra)
 library(ggfortify)
 library(vegan)
+library(Hmisc)
 ```
 
 
@@ -22,9 +23,8 @@ Principal Coordinates Analysis (PCoA)
 Like PCA, but preserves distances between plots/individuals/sites. Basically 
 it's a PCA but using non-euclidean distances.
 
-Example: plant species data set in Bryce canyon:
+### plant species data set in Bryce canyon
 ```{r import bryce data set}
-trego = read.csv("Trego2018.csv", header=TRUE)
 veg = read.csv("bryceveg.txt", header=TRUE, sep=' ')
 sites = read.csv("brycesite.txt", header=TRUE, sep=' ', row.names=1)
 ```
@@ -37,15 +37,15 @@ measured.
 dis.euc = dist(veg, 'euclidian')
 
 # do a PCoA on those distances.
-euc.pco = cmdscale(dis.euc, eig=TRUE)
+pco.euc = cmdscale(dis.euc, eig=TRUE)
 
 # another way to do a quick screeplot
-barplot(euc.pco$eig[1:10], xlab="Coordinate #", ylab="eigenvalue")
+barplot(pco.euc$eig[1:10], xlab="Coordinate #", ylab="eigenvalue")
 ```
 
 
 ```{r bryce plot the coordinates}
-autoplot(euc.pco)
+autoplot(pco.euc)
 ```
 
 
@@ -54,9 +54,9 @@ autoplot(euc.pco)
 dis.man = dist(veg, 'manhattan')
 
 # do a PCoA on those distances.
-euc.pco = cmdscale(dis.man, eig=TRUE)
+pco.man = cmdscale(dis.man, eig=TRUE)
 
-autoplot(dis.man)
+autoplot(pco.man)
 ```
 Plot looks different now. More spread. This uses sum of distances on x and y
 instead of Pythagorean theorem. 
@@ -66,230 +66,213 @@ instead of Pythagorean theorem.
 dis.bin = dist(veg, 'binary')
 
 # do a PCoA on those distances.
-euc.pco = cmdscale(dis.bin, eig=TRUE)
+pco.bin = cmdscale(dis.bin, eig=TRUE)
 
-autoplot(euc.pco)
+autoplot(pco.bin)
 ```
 Even more spread now.
 
 ```{r add data from another dataset}
-head(sites)
+ef = envfit(pco.bin, sites[, c('asp', 'elev', 'slope')])
+
+plot(pco.bin$points)
+plot(ef)
+```
+
+
+```{r gradient plot on asp column}
+ordisurf(pco.bin, sites$asp, col='forestgreen')
+```
+
+### Ant dataset
+```{r get the ant dataset}
+ant = read.csv('AntPresenceAbsence.csv', header=TRUE)
+
+```
+
+using vegdist() from vegan package instead of dist(), which can handle 
+bray-curtis
+
+Leave out sites (column 1) because it's really just the index name.
+```{r bray curtis distances}
+dis.bc = vegdist(ant[,-1], method='bray')
+
+pco.bc = cmdscale(dis.bc, eig=TRUE)
+
+autoplot(pco.bc)
+```
+
+Some notes:
+
+There's no significance we can establish from this. Just shows where the data
+falls in the plot. Basically, no p-values.
+
+
+```{r somewhat prettier plot} 
+dimnames(pco.bc$points)[[1]] = ant$Site
+
+autoplot(
+  pco.bc, 
+  label=TRUE, 
+  xlab="PCO1", 
+  ylab="PCO2"
+  ) +
+  theme(
+    axis.text=element_text(size=10),
+    axis.title=element_text(size=18, face='bold')
+  )
+```
+
+final presentation notes:
+
+multivariate analyses
+Need to calculate some distances between stuff. Do soemthing like a PCoA/PCA.
+Intro the data
+Walk through methods
+Explain the patterns I see, results, etc.
+Professional looking slides.
+Just a couple references in slides is fine.
+10 minute, conference style.
+Speak professionally about the data.
+
+
+
+
+
+
+
+
+
+# Homework
+1. Visualize distribution for each compound. Should I log transform the data?
+  hist for each of the 33 columns
+  
+2. Do a PCA (prcomp)
+
+3. Show the relationship between compounds using a biplot
+
+4. Find the most important compounds with the help of a contribution plot
+(fviz_contrib), subset the data and re-run PCA with only those compounds
+that fall above the red line on the contribution plot.
+
+5. Evaluate their contribution to PC1 and PC2 using a biplot (fviz_pca_biplot).
+Color the two maturity classes on the biplot and include a convex hull
+around the two classes of dolphins. Suppress the arrows for the variables
+(compounds), only show the variable locations and text labels.
+
+6. Based on the final biplot, are different compounds associated more with
+immature than mature dolphins? 
+
+```{r get blubber dataset}
+blubber = read.csv("Trego2018.csv", header=TRUE)
+```
+
+Visualize distribution for each compound. Should I log transform the data?
+```{r question 1.1}
+hist.data.frame(blubber[3:13], nclass=10)
+hist.data.frame(blubber[14:23], nclass=10)
+hist.data.frame(blubber[24:33], nclass=10)
+```
+Looks like some of these should be log transformed:
+- B.CDE
+- Brominated.anisole
+- Brominated.indole
+- Methylsulfonyl.PCB
+- PBB
+- TCPMOH
+- Unknown.2
+- Unknown.6
+
+Apply some logs and check for improvement.
+```{r question 1.2}
+blubber[, c(3:35)] = blubber[, c(3:35)] + 0.0001
+
+blubber$B.CDE = log(blubber$B.CDE)
+blubber$Brominated.anisole = log(blubber$Brominated.anisole)
+blubber$Brominated.indole = log(blubber$Brominated.indole)
+blubber$Methylsulfonyl.PCB = log(blubber$Methylsulfonyl.PCB)
+blubber$PBB = log(blubber$PBB)
+blubber$TCPMOH = log(blubber$TCPMOH)
+blubber$Unknown.2 = log(blubber$Unknown.2)
+blubber$Unknown.6 = log(blubber$Unknown.6)
+
+hist.data.frame(blubber[3:13], nclass=10)
+hist.data.frame(blubber[14:23], nclass=10)
+hist.data.frame(blubber[24:33], nclass=10)
+```
+Added 0.0001 to all columns to prevent log(0) from breaking.
+
+
+Do a PCA (prcomp)
+```{r question 2}
+pca.blubber = prcomp(blubber[,c(3:35)], scale=TRUE)
+```
+
+Show the relationship between compounds using a biplot
+```{r question 3}
+autoplot(pca.blubber)
+```
+I can sort of see some groupings, with a few points far from the rest.
+
+
+Find the most important compounds with the help of a contribution plot
+(fviz_contrib)
+```{r question 4.1}
+fviz_contrib(pca.blubber, choice="var", axes = 1)
+```
+More than half of the data is above the cutoff.
+
+
+Subset the data and re-run PCA with only those compounds that 
+fall above the red line on the contribution plot.
+```{r question 4.2}
+blubber.good = blubber[,c(
+"Chlordane.related",
+"DDT.related",
+"Dichlorobenzophenone",
+"Heptachlor.related",
+"MeO.B.CDE",
+"MeO.BDE",
+"Methylenebistrichloroanisole",
+"Methylsulfonyl.PCB",
+"Mirex.related",
+"PBB",
+"PBDE",
+"TCPM",
+"TCPMOH",
+"Unknown.2",
+"Unknown.4",
+"Unknown.7"
+)]
+
+pca.blubber.good = prcomp(blubber.good, scale=TRUE)
+```
+
+
+
+Evaluate their contribution to PC1 and PC2 using a biplot (fviz_pca_biplot).
+Color the two maturity classes on the biplot and include a convex hull
+around the two classes of dolphins. Suppress the arrows for the variables
+(compounds), only show the variable locations and text labels.
+```{r question 5}
+fviz_pca_biplot(
+  pca.blubber.good, 
+  axes = c(1, 2), 
+  geom = c("point", "text"),
+  geom.var = c("point", "text"), # suppressed arrows
+  col.ind = blubber$Maturity,
+  addEllipses = TRUE, 
+  ellipse.type = 'confidence'
+  )
 
 ```
 
 
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
+Question 6: Based on the final biplot, are different compounds associated more 
+with immature than mature dolphins? 
+
+Answer: It looks like __MeO.B.CDE__ and __MeO.BDE__ are far more associated with
+immature dolphins than mature dolphins, at least as far as the first 2 
+principal components. The rest of the mass spec data colelcted is associated 
+more closely with mature dolphins.
 
