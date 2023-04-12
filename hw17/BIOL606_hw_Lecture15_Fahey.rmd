@@ -5,38 +5,75 @@ date: "2023-04-12"
 output: html_document
 ---
 
-```{r setup}
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
 
-
+library(ggplot2)
+library(factoextra)
+library(ggfortify)
+library(vegan)
 ```
 
 
-```{r}
+# In Class work
 
+Principal Coordinates Analysis (PCoA)
+
+Like PCA, but preserves distances between plots/individuals/sites. Basically 
+it's a PCA but using non-euclidean distances.
+
+Example: plant species data set in Bryce canyon:
+```{r import bryce data set}
+trego = read.csv("Trego2018.csv", header=TRUE)
+veg = read.csv("bryceveg.txt", header=TRUE, sep=' ')
+sites = read.csv("brycesite.txt", header=TRUE, sep=' ', row.names=1)
+```
+Each plant species gets a coverage score from 0 to 6. 0 is not present, 0.5 is
+trace presence, 6 is abundant. Each row is a site in Bryce canyon that was 
+measured.
+
+```{r Bryce distance matrix}
+# get the distance matrix
+dis.euc = dist(veg, 'euclidian')
+
+# do a PCoA on those distances.
+euc.pco = cmdscale(dis.euc, eig=TRUE)
+
+# another way to do a quick screeplot
+barplot(euc.pco$eig[1:10], xlab="Coordinate #", ylab="eigenvalue")
 ```
 
 
-```{r}
-
+```{r bryce plot the coordinates}
+autoplot(euc.pco)
 ```
 
 
-```{r}
+```{r Manhattan instead of euclidean distance}
+# get the Manhattan distance matrix
+dis.man = dist(veg, 'manhattan')
 
+# do a PCoA on those distances.
+euc.pco = cmdscale(dis.man, eig=TRUE)
+
+autoplot(dis.man)
 ```
+Plot looks different now. More spread. This uses sum of distances on x and y
+instead of Pythagorean theorem. 
 
+```{r convert to presence or absence}
+# this converts everything to 0 or 1, and calculates binary distance
+dis.bin = dist(veg, 'binary')
 
-```{r}
+# do a PCoA on those distances.
+euc.pco = cmdscale(dis.bin, eig=TRUE)
 
+autoplot(euc.pco)
 ```
+Even more spread now.
 
-
-```{r}
-
-```
-
-
-```{r}
+```{r add data from another dataset}
+head(sites)
 
 ```
 
