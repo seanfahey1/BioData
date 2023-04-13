@@ -1,0 +1,177 @@
+---
+title: "Lecture 13"
+author: "Sean Fahey"
+date: "2023-04-05"
+output: html_document
+---
+
+```{r setup}
+library(ggplot2)
+library(Hotelling) # for hotelling's test
+library(car)
+library(mvnTest)
+library(vegan)
+```
+
+# In Class
+### bottle and iris datasets
+
+univariate: one response
+multivariate: more than one response variable
+
+- multiple measurements from the same individual that are **NOT independent**
+- can be cont. or cat.
+- will use multivariate for final
+
+```{r get bottle dataset ready}
+data(bottle.df)
+summary(bottle.df)
+
+cat('\n\n')
+
+# get just rows that match bottle 1 & 2
+bottle.1 = bottle.df[bottle.df$Number == 1, -1] # leaving off the first column
+bottle.2 = bottle.df[bottle.df$Number == 2, -1]
+
+# get means for each column (for each bottle)
+colMeans(bottle.1)
+colMeans(bottle.2)
+```
+
+
+```{r simple multivariate analysis}
+bottle_hotelling_test = hotelling.test(
+                            x = bottle.1, 
+                            y = bottle.2
+                          )
+
+bottle_hotelling_test
+```
+p-value of 0.002949. Pretty low. Reject the null hypothesis that the elements
+in these bottle types is the same.
+
+Use *MANOVA* to compare 2 or more multivariate samples. Like ANOVA, but for
+multivariate.
+
+- Compares centers of each group. Each group is a cloud of points on 
+n-dimensions (number of response variables). 
+- MANOVA only cares about center 
+of the group cloud, like how ANOVA cares about the mean for each group's 
+response. 
+
+```{r example to visualize multiple response variables}
+scatterplotMatrix( # from car package
+  ~ Sepal.Length + 
+    Sepal.Width + 
+    Petal.Length 
+  | Species, 
+  data=iris
+  )
+
+```
+Another way to visualize is to just make boxplots for each response for each
+species.
+
+```{r MANOVA example}
+# using 2 response varaibles to start
+manova.1 = manova(
+  cbind(Sepal.Length, Sepal.Width) ~ # cbind because we need to do it on both
+    Species, 
+  data=iris
+  )
+
+summary(manova.1)
+cat('\n\n\n')
+summary.aov(manova.1) # gives p value for each response variable
+```
+Looks like there's a significant difference between the three species with
+respect to the size and shape of the sepal.
+
+Also from the summary.aov, it looks like both response variables matter.
+
+```{r MANOVA for all 4 traits}
+manova.2 = manova(
+  cbind(Sepal.Length, Sepal.Width, Petal.Length, Petal.Width) ~ 
+    Species, 
+  data=iris
+  )
+
+summary(manova.2)
+cat('\n\n\n')
+summary.aov(manova.2)
+```
+All 4 response variables contribute to the difference.
+
+### root dataset
+
+```{r import root data}
+root = read.csv("root.txt", sep=' ', header=TRUE)
+root$Tree.Number = as.factor(root$Tree.Number)
+
+head(root)
+```
+
+
+```{r root stock MANOVA}
+manova.root = manova(
+  cbind(Girth.4.Yr, Ext.Growth.4.Yr, Girth.15.Yr, Weight.15.Yr) ~ 
+    Tree.Number, 
+  data=root
+  )
+
+summary(manova.root)
+```
+Looks like there is a significant difference between root stocks
+
+```{r MANOVA summary}
+summary.aov(manova.root)
+```
+Girth and weight at 15 years are the most important responses. 
+
+*Some assumptions MANOVA makes:*
+
+1. Samples are random. ie. root stocks aren't close or far from each other,
+in more sunlight, etc.
+2. Normally distributed errors for each response, and equal variances among
+groups
+    + This can be tested with ANOVA, t-test, etc.
+    
+3. Errors (residuals) follow a multivariate normal distribution
+    + mvnTest is a package that tests for this
+    
+4. Co-variances are equal among groups
+
+
+```{r mvnTest for normal dist test example}
+DH.test(data = iris[iris$Species=='versicolor',1:4])
+
+```
+
+**What if you can't meet the assumptions required for MANOVA?**
+
+Use **ANOSIM** to figure out if you have a problem. (Analysis of Similarity):
+anosim()
+
+*OR*
+
+Use **PERMANOVA** (non-parametric anova): adonis2()
+
+
+### darlingtonia dataset
+
+Goal is to quantify how far apart two samples are in euclidean space. 
+
+```{r get darlingtonia data}
+darl = read.csv("DarlingtoniaData.csv", header=TRUE)
+head(darl)
+```
+height is very large, but the other values are very small. Time to standardize
+the data.
+
+```{r z score normalization}
+height = scale(darl$height, center=TRUE, scale=TRUE)
+mouth_diam = scale(darl$mouth_diam, center=TRUE, scale=TRUE)
+tube_diam = scale(darl$tube_diam, center=TRUE, scale=TRUE)
+
+```
+
