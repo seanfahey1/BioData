@@ -1,5 +1,5 @@
 ---
-title: 'Untitled'
+title: 'HW 16 - NMDS'
 author: "Sean Fahey"
 date: "2023-04-17"
 output: html_document
@@ -7,68 +7,233 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-
+library(vegan)
 
 ```
 
 # In Class Work
+__NMDS__
 
+_similar to PCA_
+
+- get distance matrix
+- use different distance/dissimilarity methods
+- algo. generates new ordination (order for values)
+- compares order to initial distance matrix. Calculate goodness of fit 
+(called stress)
+- finds minimum stress value. Plots how samples are arranged in 2-D.
+
+__Bray Curtis__
+
+- doesn't vary when units change
+- unaffected by addition or removal of species not found in a pair of 
+communities. (if 2 sites share a set of species, they should be similar)
+- unaffected by adding new communities/sites
+- Can show difference in abundance, ie. if one site is far more abundance than
+another even though the two sites share the same number of species.
+- value of 1 = sites have nothing in common
+- value of 0 = sites are identical
 
 ```{r import data}
-veg = read.csv("bryceveg.txt", header=TRUE, sep=' ')
+veg = read.csv("bryceveg.txt", header=TRUE, sep=' ', row.names=1)
 sites = read.csv("brycesite.txt", header=TRUE, sep=' ', row.names=1)
 
 ```
 
 
-```{r}
+### meta-MDS
+slightly fancier than normal NMDS, does refitting for us automatically
+
+PCA gives us one principal componenet per column in dataset, MDS gives us
+k components (depending on what k we specify)
+```{r meta NMDS}
+# k=2 means do this in 2 dimensions
+bc.nmds = metaMDS(comm = veg, distance = "bray", k = 2, trace = 0)
+
+bc.nmds
+```
+stress value is ~0.14. General rule of thumb is that below 0.2, below 0.1 is 
+very good, 0 is best.
+
+```{r plot ordination distances}
+pl = ordiplot(
+  bc.nmds, 
+  type='none', 
+  main=paste0( # plot title
+    'Stress = ', 
+    round(bc.nmds$stress,dig=3)
+    )
+  )
+
+points(pl, what='sites', col="black", pch=4) # add points for the sites
+
+points(pl, what='species', col='tomato', pch=20) # add points for the species
+
+legend( # add legend at bottom
+  'bottomright', 
+  legend=c('Sites', 'Species'), 
+  col=c('black', 'tomato'), 
+  pch=c(4,20)
+  )
+```
+
+### Stress
+
+Stress is the goodness of fit measurement. A stress of 0.2 means roughly 80%
+of the variation in the original distance matrix can be explained by the 2
+MDS components. 
+
+```{r stress plot}
+
+
+```
+
+### Ordination Plots
+
+```{r fancy ordination plot}
+pl = ordiplot(
+  bc.nmds, 
+  type='none', 
+  main=paste0( # plot title
+    'Stress = ', 
+    round(bc.nmds$stress,dig=3)
+    )
+  )
+
+# add points for sites where berries present
+points(pl, veg$berrep>0, what='sites', col="tomato", pch=20)
+
+# add points for sites where berries absent
+points(pl, veg$berrep == 0, what='sites', col='black', pch=20)
+
+legend( # add legend at bottom
+  'bottomright', 
+  legend=c('Berries present', 'Berries absent'), 
+  col=c('tomato', 'black'), 
+  pch=c(20,20),
+  title=expression(italic(Berries ~ repens))
+  )
 
 ```
 
 
-```{r}
+```{r add convex hull}
+pl = ordiplot(
+  bc.nmds, 
+  type='none', 
+  main=paste0( # plot title
+    'Stress = ', 
+    round(bc.nmds$stress,dig=3)
+    )
+  )
+
+# add points for sites where berries present
+points(pl, veg$berrep>0, what='sites', col="tomato", pch=20)
+
+# add points for sites where berries absent
+points(pl, veg$berrep == 0, what='sites', col='black', pch=20)
+
+legend( # add legend at bottom
+  'bottomright', 
+  legend=c('Berries present', 'Berries absent'), 
+  col=c('tomato', 'black'), 
+  pch=c(20,20),
+  title=expression(italic(Berries ~ repens))
+  )
+
+# add an outline where the groups are found.
+ordiellipse(
+  bc.nmds, 
+  kind='ehull', # how to include points, this means all (?)
+  draw="polygon", 
+  groups=veg$berrep>0, 
+  col=c('black', 'red'), 
+  label=F
+  )
 
 ```
 
 
-```{r}
+```{r adding outside info}
+# make the depth column a factor
+sites$depth = as.factor(sites$depth)
+
+pl = ordiplot(
+  bc.nmds, 
+  type='none', 
+  main=paste0( # plot title
+    'Stress = ', 
+    round(bc.nmds$stress,dig=3)
+    ),
+  las = 1
+  )
+
+# add points colored by sites column
+# this gives me color number 5 and 6, change the addition to change the color 
+# pair
+points(pl, what='sites', col=as.numeric(sites$depth)+5, pch=20)
+
+legend( # add legend at bottom
+  'bottomright', 
+  legend=levels(sites$depth),
+  col=6:7, # make the colors match the points
+  pch=20,
+  cex=1.2,
+  title="Depth"
+  )
 
 ```
 
 
-```{r}
+```{r adding contours}
+pl = ordiplot(
+  bc.nmds, 
+  type='none', 
+  main=paste0( # plot title
+    'Stress = ', 
+    round(bc.nmds$stress,dig=3)
+    ),
+  las = 1
+  )
 
+# add points colored by sites column
+# this gives me color number 5 and 6, change the addition to change the color 
+# pair
+points(pl, what='sites', col='black', pch=4)
+
+legend( # add legend at bottom
+  'bottomright', 
+  legend="Sites",
+  col='black', # make the colors match the points
+  pch=4,
+  )
+
+# add contour markers for elevation of site
+ordisurf(bc.nmds, sites$elev, main='', add=TRUE)
 ```
 
 
-```{r}
-
+```{r envfit}
+ef2 = envfit(bc.nmds, sites[,c('elev', 'av', 'slope')])
+ef2
 ```
 
 
-```{r}
+```{r envfit ordination plot}
+ordiplot(
+  bc.nmds, 
+  main=paste0(
+    "Stress = ", 
+    round(bc.nmds$stress, dig=3)), 
+  las=1
+  )
+
+plot(ef2)
 
 ```
 
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
+### PCOA vs. NMDS
+__Both using bray curtis__
 
 
 ```{r}
