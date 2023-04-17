@@ -231,179 +231,106 @@ ordiplot(
 plot(ef2)
 
 ```
+There's no units on an NMDS plot, because we converted to a rank-order. 
+Typically there's not even ticks on an axis when publishing the values. 
 
-### PCOA vs. NMDS
-__Both using bray curtis__
+----
+
+### Standardization and transformation
+
+- metaNMDS applies a default transformation
+- some common transformations:
+  1. sq root transformation
+  2. 4th root (double sq root)
+  3. log-transform
+  4. Wisconsin
 
 
-```{r}
+# Homework
+
+_instructions_
+
+- Run a NMDS on the bird data (macnally_full2.csv, leave out columns 1&2, 
+SITE + HABITAT), using Bray-Curtis as the distance metric with the vegan 
+metaMDS function
+
+- Generate a NMDS ordination plot showing the sites only (no species arrows), 
+and draw ellipsoid hulls around each of the 6 habitat types to show how 
+habitat maps onto the ordination.
+
+  - Color the site points by HABITAT type (column 2 of data frame)
+
+  - Use the ordiellipse() function, and the groups argument should be defined 
+using the HABITAT data in column 2 of the data frame
+
+  - Include a legend in the plot to show which point color maps to which 
+habitat type
+
+- Based on your plot, describe which (if any) of the habitats differ in 
+community composition
+
+
+
+### NMDS
+```{r import dataset}
+bird = read.csv("macnally_full2.csv", header=TRUE, sep=',', row.names=1)
+bird$HABITAT = as.factor(bird$HABITAT)
+
+```
+
+NMDS summary
+```{r NMDS}
+bird.nmds = metaMDS(comm = bird[c(-1,-2)], distance = "bray", k = 2, trace = 0)
+
+bird.nmds
+```
+
+ordination plot with just sites
+```{r ordination plot}
+bird.plot = ordiplot(
+  bird.nmds, 
+  type='none', 
+  main=paste0( # plot title
+    'Stress = ', 
+    round(bird.nmds$stress,dig=3) # add stress label to title
+    ),
+  xaxt='none', # remove tick marks from NMDS plots 
+  yaxt='none'
+  ) 
+
+# add data points
+points(
+  bird.plot, 
+  what='sites', 
+  col=as.numeric(bird$HABITAT), # color by habitat
+  pch=as.numeric(bird$HABITAT) # shape by habitat
+  )
+
+legend( # add legend at bottom left
+  'bottomleft', 
+  legend=levels(bird$HABITAT),
+  col=1:6, # make the colors match the points
+  pch=1:6, # make the shapes match
+  cex=0.9,
+  title="Depth"
+  )
+
+ordiellipse(
+  bird.nmds, 
+  kind='ehull', # how to include points, this means all (?)
+  draw="polygon", 
+  col=1:6,
+  alpha=0.2,
+  groups=bird$HABITAT, 
+  label=F
+  )
 
 ```
 
 
-```{r}
 
-```
 
 
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
 
 
 
