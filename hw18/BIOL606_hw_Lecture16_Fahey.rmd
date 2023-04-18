@@ -83,11 +83,6 @@ Stress is the goodness of fit measurement. A stress of 0.2 means roughly 80%
 of the variation in the original distance matrix can be explained by the 2
 MDS components. 
 
-```{r stress plot}
-
-
-```
-
 ### Ordination Plots
 
 ```{r fancy ordination plot}
@@ -266,10 +261,6 @@ using the HABITAT data in column 2 of the data frame
   - Include a legend in the plot to show which point color maps to which 
 habitat type
 
-- Based on your plot, describe which (if any) of the habitats differ in 
-community composition
-
-
 
 ### NMDS
 ```{r import dataset}
@@ -292,7 +283,7 @@ bird.plot = ordiplot(
   type='none', 
   main=paste0( # plot title
     'Stress = ', 
-    round(bird.nmds$stress,dig=3) # add stress label to title
+    round(bird.nmds$stress,dig=4) # add stress label to title
     ),
   xaxt='none', # remove tick marks from NMDS plots 
   yaxt='none'
@@ -311,8 +302,8 @@ legend( # add legend at bottom left
   legend=levels(bird$HABITAT),
   col=1:6, # make the colors match the points
   pch=1:6, # make the shapes match
-  cex=0.9,
-  title="Depth"
+  cex=0.8,
+  title="Habitat"
   )
 
 ordiellipse(
@@ -327,10 +318,14 @@ ordiellipse(
 
 ```
 
+__Question:__ Based on your plot, describe which (if any) of the habitats 
+differ in community composition
 
 
-
-
+__Answer:__ Two of the habitats are clearly different from the others in the
+NMDS ordination plot: _Box-Ironbank_ and _Red River Gum_. These points do not
+overlap at all with any other habitat. The remaining habitats all overlap the
+mixed group. 
 
 
 
