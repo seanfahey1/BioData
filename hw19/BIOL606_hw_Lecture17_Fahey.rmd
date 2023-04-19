@@ -1,0 +1,279 @@
+---
+title: "Lecture 17"
+author: "Sean Fahey"
+date: "2023-04-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(vegan)
+
+```
+
+
+# In Class Work
+
+### Redundancy Analysis (RDA)
+- One common use: exploring relationships between species abundance and 
+environment variables.
+- Species is typically the response
+- Measure abundance of n species in each plot
+- Sites/plots are typically the replicates
+- Also measure some env. characteristics of each site/plot.
+
+
+---
+
+- RDA uses euclidean distances
+- Finds linear relationship between predictors and response distances.
+- Assumes casual relationship between predictors and response variables
+- Response variables can be different types, but must be standardized
+- Predictors can be standardized, but don't have to be
+
+```{r import data}
+veg = read.csv("bryceveg.txt", header=TRUE, sep=' ', row.names=1)
+sites = read.csv("brycesite.txt", header=TRUE, sep=' ', row.names=1)
+```
+
+
+
+```{r center and scale}
+veg.center = scale(veg, center = TRUE, scale = TRUE)
+
+env = with(
+  sites, 
+  cbind(elev, av, slope)
+  )
+env.scale = as.data.frame(scale(env, center = TRUE, scale = TRUE))
+```
+
+
+
+```{r vegitation RDA}
+veg.rda = rda(
+  veg.center ~ elev + av + slope, 
+  data=env.scale
+  )
+
+veg.rda
+```
+
+
+```{r veg rda triplot}
+plot(
+  veg.rda, 
+  scaling = 2, 
+  main = 'Scaling = 2, correlation plot', # title
+  display = c('sites', 'species', 'bp')
+  )
+
+```
+- scaling = 2: emphasize correlation between vectors and distances between 
+sites
+- similar angles: high correlation
+- 90 degrees off: no correlation
+- sites falling further out along predictor are more strongly associated with 
+that predictor
+
+
+```{r anova of the RDA analysis}
+anova(veg.rda)
+
+```
+F value of 2.8, p value of < 0.001.
+
+This means that our predictors combined seem to have a significant relationship
+with the ordination space from the RDA of our species counts
+
+
+```{r adding a categorical predictor}
+sites$pos = as.factor(sites$pos)
+env.scale$pos = sites$pos
+
+veg.rda2 = rda(
+  veg.center ~ elev + av + slope + pos, 
+  data=env.scale
+  )
+
+anova(veg.rda2)
+```
+
+
+
+```{r anova by term}
+anova(veg.rda2, by='term')
+
+```
+Looks like position and elevation are the important terms.
+
+
+```{r anova by axis}
+anova(veg.rda2, by='axis')
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
