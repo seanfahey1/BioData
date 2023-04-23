@@ -224,7 +224,12 @@ comment Rmd file HEAVILY. A person should be able to return to this document
 in a year and understand what the flow was and what each cell is doing without 
 running it.
 
-No extra points for doing NMDS vs. PCA vs. others. But must use the RIGHT ONE.
+No extra points for doing NMDS vs. PCA vs. others. But must use the RIGHT 
+ONE. And interpret it correctly. And comment on it approprately.
+
+
+Methods and results:
+Breif, but descriptive. Scientific language.
 
 
 

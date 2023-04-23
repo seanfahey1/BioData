@@ -1,0 +1,141 @@
+---
+title: "Final"
+author: "Sean Fahey"
+date: "2023-04-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+```
+
+# About the dataset
+
+
+### Reference
+
+[Soil Dataset](https://www.kaggle.com/datasets/ramakrishnanthiyagu/soil-
+compositions)
+
+Originally distributed by LSU School of Plant, Environmental, and Soil 
+Sciences (Dr. Moser Research Laboratory). 
+
+<hr>
+
+### Descrription
+
+__Summary:__
+
+Soil samples in "commerce silt loam" cotton fields in Louisiana collected 
+between 1987 and 1990.
+
+9 response variables were measured at 4 different depths (0-10cm, 10-30cm, 
+30-60cm, and 60-90cm), and 3 different contours (Top, Slope, and Depression).
+
+__Response Variables:__
+
+- pH
+- N (total Nitrogen %)
+- Dens (soil density in gm/cm^3)
+- P (total Phosphorous in ppm)
+- Ca (total Calcium in meq/100g)
+- Mg (total Magnesium in meq/100g)
+- K (total Phosphorous in meq/100g)
+- Na (total Sodium in meq/100g)
+- Conduc (conductivity)
+
+
+```{r import and clean up data}
+# Import data csv file
+soil = read.csv("Soils.csv")
+
+# Correct the string entries for Depth
+soil$Depth[soil$Depth == "0-10"] = "Shallow"
+soil$Depth[soil$Depth == "Oct-30"] = "Medium"
+soil$Depth[soil$Depth == "30-60"] = "Deep"
+soil$Depth[soil$Depth == "60-90"] = "Very Deep"
+
+# Add a group column to the front by combining Depth and Contour columns
+group <- paste(soil$Depth, soil$Contour, sep="_")
+soil = data.frame(Group = group, soil)
+
+# Drop unused columns
+soil = soil[,c(-2:-6)]
+
+head(soil)
+```
+
+
+
+
+```{r}
+
+
+```
+
+
+
+
+```{r}
+
+
+```
+
+
+
+
+```{r}
+
+
+```
+
+
+
+
+```{r}
+
+
+```
+
+
+
+
+```{r}
+
+
+```
+
+
+
+
+```{r}
+
+
+```
+
+
+
+
+```{r}
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
