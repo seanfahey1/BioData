@@ -116,164 +116,123 @@ anova(veg.rda2, by='axis')
 
 
 ```{r}
-
+plot(
+  veg.rda2, 
+  scaling = 2, 
+  main = 'Scaling = 2, correlation plot', # title
+  display = c('sites', 'species', 'bp')
+  )
 ```
 
+
+
+```{r import snail data}
+snails = read.table('SmallSnailData.txt', header=TRUE, sep=' ')
+head(snails)
+```
+field sites (col 5-8) can be predictors
+
+```{r scale snail}
+shelldata = snails[,2:4]
+sitedata = snails[,5:8]
+
+rownames(shelldata) = as.character(snails$Site)
+rownames(sitedata) = as.character(snails$Site)
+
+shell.center = as.data.frame(scale(shelldata))
+site.center = as.data.frame(scale(sitedata))
+```
+
+
+
+```{r snail rda}
+snail.rda = rda(
+  shell.center~Rainfall.mm. + DryMonths + MeanTempC, 
+  data=site.center, 
+  scale=FALSE # already scaled, don't do it again.
+  )
+
+anova(snail.rda, by = 'term')
+```
+
+
+Doing scaling=2 so euclidean distances are best represented between species
+(blue arrows)
+
+```{r plot snail rda}
+plot(
+  snail.rda, 
+  scaling = 1, 
+  main = 'Scaling = 1, correlation plot', # title
+  display = c('sites', 'species', 'bp')
+  )
+```
+
+
+
+```{r again with scaling 2}
+plot(
+  snail.rda, 
+  scaling = 2, 
+  main = 'Scaling = 2, correlation plot', # title
+  display = c('sites', 'species', 'bp')
+  )
+```
+
+### What if Eudledian distances aren't ideal?
+- CCA: Canonical Correspondence Analysis from vegan
+  - Uses chi squared
+- Others like Bray-Curtis can also be used.
+
+```{r decostand chi sq}
+veg.chi = decostand(veg, method='chi.square')
+veg.rda.chi = rda(
+  veg.chi ~ elev + av + slope, 
+  data=env.scale
+  )
+
+anova(veg.rda.chi, by='terms')
+```
+Using chi squared means rare species will be more emphasized at the expense
+of common species.
 
 
 ```{r}
 
 ```
 
+----
 
 
-```{r}
+# Notes for FINAL
 
-```
+1. Analyze multivariate data set
+  a. Do an ordination, and optionally other analyses (like permanova)
+2. Components:
+  a. 10 minute conference style presentation (50 pts)
+  b. .Rmd file and data file submission (10 pts)
+  c. 
 
+in presentation: reference specific packages, but don't show slides full of 
+code (but not ggplot, ggfortify, other super basics that don't manipulate the 
+data). We care more about specifically which rda function from which package 
+we used
+in write-up: cite packages
+if you borrow images, credit the author
 
+comment Rmd file HEAVILY. A person should be able to return to this document 
+in a year and understand what the flow was and what each cell is doing without 
+running it.
 
-```{r}
+No extra points for doing NMDS vs. PCA vs. others. But must use the RIGHT ONE.
 
-```
 
 
 
-```{r}
 
-```
 
 
 
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
-
-
-
-```{r}
-
-```
 
 
 
