@@ -7,32 +7,33 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-
-
+library(Hmisc)
+library(ggfortify)
+library(factoextra)
 ```
 
-# About the dataset
+# About the Dataset
 
 
 ### Reference
 
-[Soil Dataset](https://www.kaggle.com/datasets/ramakrishnanthiyagu/soil-
-compositions)
+__[Soil Dataset](https://www.kaggle.com/datasets/ramakrishnanthiyagu/soil-
+compositions)__
 
 Originally distributed by LSU School of Plant, Environmental, and Soil 
 Sciences (Dr. Moser Research Laboratory). 
 
 <hr>
 
-### Descrription
+### Description
 
 __Summary:__
 
 Soil samples in "commerce silt loam" cotton fields in Louisiana collected 
 between 1987 and 1990.
 
-9 response variables were measured at 4 different depths (0-10cm, 10-30cm, 
-30-60cm, and 60-90cm), and 3 different contours (Top, Slope, and Depression).
+9 response variables were measured at 4 different depths (0-10 cm, 10-30 cm, 
+30-60 cm, and 60-90 cm), and 3 different contours (Top, Slope, and Depression).
 
 __Response Variables:__
 
@@ -57,72 +58,142 @@ soil$Depth[soil$Depth == "Oct-30"] = "Medium"
 soil$Depth[soil$Depth == "30-60"] = "Deep"
 soil$Depth[soil$Depth == "60-90"] = "Very Deep"
 
+soil$Depth = factor(
+    soil$Depth, 
+    ordered = TRUE, 
+    levels = c("Shallow", "Medium", "Deep", "Very Deep")
+  )
+
 # Add a group column to the front by combining Depth and Contour columns
 group <- paste(soil$Depth, soil$Contour, sep="_")
-soil = data.frame(Group = group, soil)
+soil = data.frame(Group = as.factor(group), soil)
 
 # Drop unused columns
-soil = soil[,c(-2:-6)]
+soil = subset(soil, select = -c(Group.1, Gp, Block))
 
 head(soil)
 ```
 
+# To Do:
+
+1. Visualize distribution
+    a. Transform which?
+    b. Keep transformations?
+2. Do PCA
+3. Bi-plot
+4. Contribution plot
+    a.Subset to important data
+5. Re-run PCA
+6. Bi-plot colored by group, or contour, or depth
+7. Fix import to match coloring choice
+
+# Questions:
+1. Should I do PCA? Or is NMDS required when units differ?
+2. 
 
 
+```{r Visualize, transform, visualize}
+hist.data.frame(soil[4:12], nclass=10)
 
-```{r}
+# It looks like Nitrogen, Density, and Phosphorous are skewed. It's worth
+# trying a log transformation for these 3 and seeing if they substantially
+# improve.
 
+soil$N.log = log(soil$N)
+hist.data.frame(soil[c('N', 'N.log')], nclass=10)
+
+soil$Dens.log = log(soil$Dens)
+hist.data.frame(soil[c('Dens', 'Dens.log')], nclass=10)
+
+soil$P.log = log(soil$P)
+hist.data.frame(soil[c('P', 'P.log')], nclass=10)
+```
+
+
+```{r drop unnecessary columns}
+# Only Nitrogen seemed to get significantly more normal with a log 
+# transformation. So I'm dropping the non-transformed Nitrogen column, and the
+# other 2 log transformed columns.
+
+soil = subset(soil, select = -c(N, Dens.log, P.log))
+```
+
+
+```{r PCA 1}
+soil.pca1 = prcomp(subset(soil, select = -c(Group, Contour, Depth)), scale=TRUE)
+autoplot(soil.pca1)
+```
+
+```{r checking contribution of each principal component}
+summary(soil.pca1)
+
+# ~81.5% of variance can be explained by the first 2 component, with 73.2% of
+# the variance being explained by just the first principal component alone.
+```
+
+```{r contribution plot}
+fviz_contrib(soil.pca1, choice="var", axes = 1)
+
+# Component 1 is primarily driven by Conductivity, log(Nitrogen), Sodium, 
+# Calcium, and Density.
+
+fviz_contrib(soil.pca1, choice="var", axes = 2)
+
+# Component 2 is driven almost entirely by just Magnesium
+```
+
+
+```{r biplot 1}
+fviz_pca_biplot(
+  soil.pca1, 
+  axes = c(1, 2), 
+  geom = c("point"),
+  geom.var = c("arrow", "text"), # suppressed arrows
+  col.ind = soil$Depth,
+  addEllipses = TRUE, 
+  ellipse.type = 'convex'
+  )
 
 ```
 
 
 
 
-```{r}
-
-
-```
-
-
-
-
-```{r}
-
+```{r PCA 2 dropping less important variables}
+soil.less = subset(soil, select = -c(P, pH, K))
 
 ```
 
 
 
 
-```{r}
-
-
-```
-
-
-
-
-```{r}
-
+```{r PCA 2}
+soil.pca2 = prcomp(subset(soil.less, select = -c(Group, Contour, Depth)), scale=TRUE)
+autoplot(soil.pca2)
 
 ```
 
 
 
 
-```{r}
+```{r summary 2}
+summary(soil.pca2)
 
-
+# Now a full 89% of the variance is explained by the first 2 principal 
+# components
 ```
 
-
-
-
-```{r}
-
-
+```{r biplot 2}
+fviz_pca_biplot(
+  soil.pca2, 
+  axes = c(1, 2), 
+  geom = c("point"),
+  geom.var = c("arrow", "text"), # suppressed arrows
+  col.ind = soil$Depth,
+  addEllipses = TRUE, 
+  ellipse.type = 'convex'
+  )
 ```
-
 
 
 
