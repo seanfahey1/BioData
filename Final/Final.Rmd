@@ -5,6 +5,59 @@ date: "2023-04-23"
 output: html_document
 ---
 
+
+
+# To Do:
+
+1. Visualize distribution
+    a. Transform which?
+    b. Keep transformations?
+
+2. Do PCA
+
+3. Bi-plot
+
+4. Contribution plot
+    a.Subset to important data
+
+5. Re-run PCA
+
+6. Bi-plot colored by group, or contour, or depth?
+
+7. RDA
+
+8. anova of RDA
+
+9. triplot with categorical predictors labeled or colored
+
+<hr>
+
+
+# Questions:
+
+1. Should I do PCA? Or is NMDS always required when units differ?
+
+2. Can I do an RDA? - because I have 2 predictor variables (contour and depth)
+RDA is usually tying to compare something measured (species abundance per site)
+to something else measured (environmental conditions). Here I only have env. 
+conditions and a categorical site. Just an RDA with 2 categorical predictors?
+Also, one of the predictors is sort of ordered, but the other isn't. Does this
+change anything?
+
+3. The data set says block is random. They added block for some kaggle project.
+Can I just drop this column?
+
+4. I made depth ordinal just as a sort of hacky way to get the colors to sort 
+right in the PCA plot, but it throws a warning. Is this warning real? Or just
+telling me that order is being discarded when drawing shapes?
+
+5. 
+
+5. Can we attend this Wednesday if not presenting?
+
+
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(Hmisc)
@@ -17,8 +70,7 @@ library(factoextra)
 
 ### Reference
 
-__[Soil Dataset](https://www.kaggle.com/datasets/ramakrishnanthiyagu/soil-
-compositions)__
+__[Soil Dataset](https://www.kaggle.com/datasets/ramakrishnanthiyagu/soil-compositions)__
 
 Originally distributed by LSU School of Plant, Environmental, and Soil 
 Sciences (Dr. Moser Research Laboratory). 
@@ -51,6 +103,7 @@ __Response Variables:__
 ```{r import and clean up data}
 # Import data csv file
 soil = read.csv("Soils.csv")
+head(soil)
 
 # Correct the string entries for Depth
 soil$Depth[soil$Depth == "0-10"] = "Shallow"
@@ -74,22 +127,6 @@ soil = subset(soil, select = -c(Group.1, Gp, Block))
 head(soil)
 ```
 
-# To Do:
-
-1. Visualize distribution
-    a. Transform which?
-    b. Keep transformations?
-2. Do PCA
-3. Bi-plot
-4. Contribution plot
-    a.Subset to important data
-5. Re-run PCA
-6. Bi-plot colored by group, or contour, or depth
-7. Fix import to match coloring choice
-
-# Questions:
-1. Should I do PCA? Or is NMDS required when units differ?
-2. 
 
 
 ```{r Visualize, transform, visualize}
@@ -189,7 +226,7 @@ fviz_pca_biplot(
   axes = c(1, 2), 
   geom = c("point"),
   geom.var = c("arrow", "text"), # suppressed arrows
-  col.ind = soil$Depth,
+  col.ind = soil$Group,
   addEllipses = TRUE, 
   ellipse.type = 'convex'
   )
