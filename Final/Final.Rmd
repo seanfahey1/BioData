@@ -13,13 +13,17 @@ output: html_document
     a. Transform which?
     b. Keep transformations?
 
-2. Do PCA
+2. Do PCA. --- BC NMDS
 
 3. Bi-plot
 
+
+-- skip
 4. Contribution plot
     a.Subset to important data
 
+see if I can get % variance explained by 2 NMDS components
+-- skip
 5. Re-run PCA
 
 6. Bi-plot colored by group, or contour, or depth?
@@ -35,6 +39,8 @@ output: html_document
 
 # Questions:
 
+0. Make sure data set is okay to use.
+
 1. Should I do PCA? Or is NMDS always required when units differ?
 
 2. Can I do an RDA? - because I have 2 predictor variables (contour and depth)
@@ -44,14 +50,18 @@ conditions and a categorical site. Just an RDA with 2 categorical predictors?
 Also, one of the predictors is sort of ordered, but the other isn't. Does this
 change anything?
 
+-- Yes. RDA will probably handle ordered factor. run w/ and wo/ to see if it changes
+
+
+
 3. The data set says block is random. They added block for some kaggle project.
 Can I just drop this column?
+
+-- Yes
 
 4. I made depth ordinal just as a sort of hacky way to get the colors to sort 
 right in the PCA plot, but it throws a warning. Is this warning real? Or just
 telling me that order is being discarded when drawing shapes?
-
-5. 
 
 5. Can we attend this Wednesday if not presenting?
 
@@ -63,6 +73,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(Hmisc)
 library(ggfortify)
 library(factoextra)
+library(vegan)
 ```
 
 # About the Dataset
@@ -111,11 +122,15 @@ soil$Depth[soil$Depth == "Oct-30"] = "Medium"
 soil$Depth[soil$Depth == "30-60"] = "Deep"
 soil$Depth[soil$Depth == "60-90"] = "Very Deep"
 
+# convert depth to an ordered factor
 soil$Depth = factor(
-    soil$Depth, 
+    soil$Depth,
     ordered = TRUE, 
     levels = c("Shallow", "Medium", "Deep", "Very Deep")
   )
+
+# convert Contour to a factor
+soil$Contour = as.factor(soil$Contour)
 
 # Add a group column to the front by combining Depth and Contour columns
 group <- paste(soil$Depth, soil$Contour, sep="_")
@@ -124,26 +139,26 @@ soil = data.frame(Group = as.factor(group), soil)
 # Drop unused columns
 soil = subset(soil, select = -c(Group.1, Gp, Block))
 
-head(soil)
+soil
 ```
 
 
 
 ```{r Visualize, transform, visualize}
-hist.data.frame(soil[4:12], nclass=10)
+hist.data.frame(soil[4:12], nclass=10, na.big=TRUE)
 
 # It looks like Nitrogen, Density, and Phosphorous are skewed. It's worth
 # trying a log transformation for these 3 and seeing if they substantially
 # improve.
 
-soil$N.log = log(soil$N)
-hist.data.frame(soil[c('N', 'N.log')], nclass=10)
+soil$N.sqrt = sqrt(soil$N)
+hist.data.frame(soil[c('N', 'N.sqrt')], nclass=10)
 
 soil$Dens.log = log(soil$Dens)
 hist.data.frame(soil[c('Dens', 'Dens.log')], nclass=10)
 
-soil$P.log = log(soil$P)
-hist.data.frame(soil[c('P', 'P.log')], nclass=10)
+soil$P.sqrt = sqrt(soil$P)
+hist.data.frame(soil[c('P', 'P.sqrt')], nclass=10)
 ```
 
 
@@ -152,98 +167,160 @@ hist.data.frame(soil[c('P', 'P.log')], nclass=10)
 # transformation. So I'm dropping the non-transformed Nitrogen column, and the
 # other 2 log transformed columns.
 
-soil = subset(soil, select = -c(N, Dens.log, P.log))
+soil = subset(soil, select = -c(N, Dens.log, P.sqrt))
+soil
 ```
 
 
-```{r PCA 1}
-soil.pca1 = prcomp(subset(soil, select = -c(Group, Contour, Depth)), scale=TRUE)
-autoplot(soil.pca1)
+```{r figure out how many dimensions are needed}
+n = 10
+stress <- vector(length = n)
+for (i in 1:n) {
+    stress[i] <- metaMDS(
+  comm = subset(soil, select = -c(Group, Contour, Depth)), 
+  distance = "bray", 
+  k = i, 
+  trace = 0)$stress
+}
+
+names(stress) <- paste0(1:n)
+# x11(width = 10/2.54, height = 7/2.54)
+
+bp = barplot(
+  stress, 
+  ylab = "Stress", 
+  xlab = "# of Dimensions", 
+  main='Stress by Number of Dimensions in metaMDS', 
+  mar = c(4,4,1,1), 
+  mgp = c(3, 1, 0), 
+  las = 0,
+  ylim = c(0, 0.085),
+  col = colorRampPalette(
+    colors = c(
+      "violet",
+      "darkviolet", 
+      "darkblue"
+      ))(10),
+  )
+
+text(
+  bp, 
+  stress, 
+  round(stress, 4), 
+  cex=0.7, 
+  pos=1, 
+  col="white"
+  )
 ```
 
-```{r checking contribution of each principal component}
-summary(soil.pca1)
 
-# ~81.5% of variance can be explained by the first 2 component, with 73.2% of
-# the variance being explained by just the first principal component alone.
-```
-
-```{r contribution plot}
-fviz_contrib(soil.pca1, choice="var", axes = 1)
-
-# Component 1 is primarily driven by Conductivity, log(Nitrogen), Sodium, 
-# Calcium, and Density.
-
-fviz_contrib(soil.pca1, choice="var", axes = 2)
-
-# Component 2 is driven almost entirely by just Magnesium
-```
-
-
-```{r biplot 1}
-fviz_pca_biplot(
-  soil.pca1, 
-  axes = c(1, 2), 
-  geom = c("point"),
-  geom.var = c("arrow", "text"), # suppressed arrows
-  col.ind = soil$Depth,
-  addEllipses = TRUE, 
-  ellipse.type = 'convex'
+```{r metaNMDS with bray-curtis distances}
+soil.nmds = metaMDS(
+  comm = subset(soil, select = -c(Group, Contour, Depth)), 
+  distance = "bray", 
+  k = 2, 
+  trace = 0
   )
 
 ```
 
 
-
-
-```{r PCA 2 dropping less important variables}
-soil.less = subset(soil, select = -c(P, pH, K))
-
+```{r check stress}
+soil.nmds
 ```
+Stress of ~0.0475 is considered very good. 
 
 
+```{r ordination plot with contour labels}
 
+soil.ord = ordiplot(
+  soil.nmds, 
+  type='none', 
+  main=paste0( # plot title
+    'Depth\nStress = ', 
+    round(soil.nmds$stress,dig=4), # add stress label to title
+    '\n Shown with 95% confidence intervals around each group'
+    ),
+  xaxt='none', # remove tick marks from NMDS plots 
+  yaxt='none'
+  ) 
 
-```{r PCA 2}
-soil.pca2 = prcomp(subset(soil.less, select = -c(Group, Contour, Depth)), scale=TRUE)
-autoplot(soil.pca2)
-
-```
-
-
-
-
-```{r summary 2}
-summary(soil.pca2)
-
-# Now a full 89% of the variance is explained by the first 2 principal 
-# components
-```
-
-```{r biplot 2}
-fviz_pca_biplot(
-  soil.pca2, 
-  axes = c(1, 2), 
-  geom = c("point"),
-  geom.var = c("arrow", "text"), # suppressed arrows
-  col.ind = soil$Group,
-  addEllipses = TRUE, 
-  ellipse.type = 'convex'
+points(
+  soil.ord, 
+  what='sites', 
+  col=as.numeric(soil$Contour), # color by habitat
+  pch=as.numeric(soil$Contour) # shape by habitat
   )
+
+legend( # add legend at bottom left
+  'topleft', 
+  legend=levels(soil$Contour),
+  col=1:4, # make the colors match the points
+  pch=1:4, # make the shapes match
+  cex=0.75,
+  title="Contour"
+  )
+
+ordiellipse(
+  soil.nmds, 
+  kind='sd', # how to include points, this means all (?)
+  draw="polygon", 
+  col=1:4,
+  alpha=0.2,
+  groups=soil$Contour, 
+  label=TRUE, 
+  border = NULL, 
+  conf=0.95,
+  lwd=2
+  )
+
 ```
 
 
+```{r ordination plot with depth labels}
 
+soil.ord = ordiplot(
+  soil.nmds, 
+  type='none', 
+  main=paste0( # plot title
+    'Depth\nStress = ', 
+    round(soil.nmds$stress,dig=4), # add stress label to title
+    '\n Shown with 95% confidence intervals around each group'
+    ),
+  xaxt='none', # remove tick marks from NMDS plots 
+  yaxt='none'
+  ) 
 
+points(
+  soil.ord, 
+  what='sites', 
+  col=as.numeric(soil$Depth), # color by habitat
+  pch=as.numeric(soil$Depth) # shape by habitat
+  )
 
+legend( # add legend at bottom left
+  'topright', 
+  legend=levels(soil$Depth),
+  col=1:4, # make the colors match the points
+  pch=1:4, # make the shapes match
+  cex=0.8,
+  title="Depth"
+  )
 
+ordiellipse(
+  soil.nmds, 
+  kind='sd', # how to include points, this means all (?)
+  draw="polygon", 
+  col=1:4,
+  alpha=0.2,
+  groups=soil$Depth, 
+  label=TRUE, 
+  border = NULL, 
+  conf=0.95,
+  lwd=2
+  )
 
-
-
-
-
-
-
+```
 
 
 
