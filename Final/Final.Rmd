@@ -71,8 +71,8 @@ telling me that order is being discarded when drawing shapes?
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(Hmisc)
-library(ggfortify)
-library(factoextra)
+#library(ggfortify)
+#library(factoextra)
 library(vegan)
 ```
 
@@ -145,20 +145,27 @@ soil
 
 
 ```{r Visualize, transform, visualize}
+png(file="histograms.png", width=1200, height=700)
 hist.data.frame(soil[4:12], nclass=10, na.big=TRUE)
+
 
 # It looks like Nitrogen, Density, and Phosphorous are skewed. It's worth
 # trying a log transformation for these 3 and seeing if they substantially
 # improve.
-
+png(file="N-transformation.png", width=600, height=350)
 soil$N.sqrt = sqrt(soil$N)
 hist.data.frame(soil[c('N', 'N.sqrt')], nclass=10)
+dev.off()
 
+png(file="Dens-transformation.png", width=600, height=350)
 soil$Dens.log = log(soil$Dens)
 hist.data.frame(soil[c('Dens', 'Dens.log')], nclass=10)
+dev.off()
 
+png(file="P-transformation.png", width=600, height=350)
 soil$P.sqrt = sqrt(soil$P)
 hist.data.frame(soil[c('P', 'P.sqrt')], nclass=10)
+dev.off()
 ```
 
 
@@ -173,6 +180,8 @@ soil
 
 
 ```{r figure out how many dimensions are needed}
+png(file="stress-per-dim.png", width=1200, height=700)
+
 n = 10
 stress <- vector(length = n)
 for (i in 1:n) {
@@ -211,6 +220,8 @@ text(
   pos=1, 
   col="white"
   )
+
+dev.off()
 ```
 
 
