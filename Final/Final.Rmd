@@ -5,74 +5,9 @@ date: "2023-04-23"
 output: html_document
 ---
 
-
-
-# To Do:
-
-1. Visualize distribution
-    a. Transform which?
-    b. Keep transformations?
-
-2. Do PCA. --- BC NMDS
-
-3. Bi-plot
-
-
--- skip
-4. Contribution plot
-    a.Subset to important data
-
-see if I can get % variance explained by 2 NMDS components
--- skip
-5. Re-run PCA
-
-6. Bi-plot colored by group, or contour, or depth?
-
-7. RDA
-
-8. anova of RDA
-
-9. triplot with categorical predictors labeled or colored
-
-<hr>
-
-
-# Questions:
-
-0. Make sure data set is okay to use.
-
-1. Should I do PCA? Or is NMDS always required when units differ?
-
-2. Can I do an RDA? - because I have 2 predictor variables (contour and depth)
-RDA is usually tying to compare something measured (species abundance per site)
-to something else measured (environmental conditions). Here I only have env. 
-conditions and a categorical site. Just an RDA with 2 categorical predictors?
-Also, one of the predictors is sort of ordered, but the other isn't. Does this
-change anything?
-
--- Yes. RDA will probably handle ordered factor. run w/ and wo/ to see if it changes
-
-
-
-3. The data set says block is random. They added block for some kaggle project.
-Can I just drop this column?
-
--- Yes
-
-4. I made depth ordinal just as a sort of hacky way to get the colors to sort 
-right in the PCA plot, but it throws a warning. Is this warning real? Or just
-telling me that order is being discarded when drawing shapes?
-
-5. Can we attend this Wednesday if not presenting?
-
-
-
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(Hmisc)
-#library(ggfortify)
-#library(factoextra)
 library(vegan)
 ```
 
@@ -106,12 +41,13 @@ __Response Variables:__
 - P (total Phosphorous in ppm)
 - Ca (total Calcium in meq/100g)
 - Mg (total Magnesium in meq/100g)
-- K (total Phosphorous in meq/100g)
+- K (total Potassium in meq/100g)
 - Na (total Sodium in meq/100g)
 - Conduc (conductivity)
 
 
 ```{r import and clean up data}
+
 # Import data csv file
 soil = read.csv("Soils.csv")
 head(soil)
@@ -138,73 +74,73 @@ soil = data.frame(Group = as.factor(group), soil)
 
 # Drop unused columns
 soil = subset(soil, select = -c(Group.1, Gp, Block))
-
-soil
 ```
 
 
-
-```{r Visualize, transform, visualize}
-png(file="histograms.png", width=1200, height=700)
+```{r Visualize, transform, visualize 1}
 hist.data.frame(soil[4:12], nclass=10, na.big=TRUE)
+dev.print(pdf, 'histograms.pdf')
 
+```
 
-# It looks like Nitrogen, Density, and Phosphorous are skewed. It's worth
-# trying a log transformation for these 3 and seeing if they substantially
-# improve.
-png(file="N-transformation.png", width=600, height=350)
+It looks like Nitrogen, Density, and Phosphorous are skewed. It's worth trying 
+a log transformation for these 3 and seeing if they substantially improve.
+
+```{r Visualize, transform, visualize 2}
+
 soil$N.sqrt = sqrt(soil$N)
 hist.data.frame(soil[c('N', 'N.sqrt')], nclass=10)
-dev.off()
+dev.print(pdf, 'N-transformation.pdf')
 
-png(file="Dens-transformation.png", width=600, height=350)
+
 soil$Dens.log = log(soil$Dens)
 hist.data.frame(soil[c('Dens', 'Dens.log')], nclass=10)
-dev.off()
+dev.print(pdf, 'Dens-transformation.pdf')
 
-png(file="P-transformation.png", width=600, height=350)
+
 soil$P.sqrt = sqrt(soil$P)
 hist.data.frame(soil[c('P', 'P.sqrt')], nclass=10)
-dev.off()
+dev.print(pdf, 'P-transformation.pdf')
 ```
 
+Only Nitrogen seemed to get significantly more normal with a log transformation. 
+So I'm dropping the non-transformed Nitrogen column, and the other 2 log 
+transformed columns.
 
 ```{r drop unnecessary columns}
-# Only Nitrogen seemed to get significantly more normal with a log 
-# transformation. So I'm dropping the non-transformed Nitrogen column, and the
-# other 2 log transformed columns.
 
 soil = subset(soil, select = -c(N, Dens.log, P.sqrt))
-soil
 ```
 
+NMDS run for all values of K 1 through 10. This is done to check what number 
+of dimensions is best to use for analysis. The number of dimensions is decided
+by stress level, with a stress of <0.05 considered to be very good.
 
 ```{r figure out how many dimensions are needed}
-png(file="stress-per-dim.png", width=1200, height=700)
-
 n = 10
 stress <- vector(length = n)
-for (i in 1:n) {
+for (i in 1:n) { # loop through values of i 1 through 10
     stress[i] <- metaMDS(
   comm = subset(soil, select = -c(Group, Contour, Depth)), 
   distance = "bray", 
-  k = i, 
+  k = i, # set k to the looped value
   trace = 0)$stress
 }
 
+# assign names to the stress vector (values 1 through 10)
 names(stress) <- paste0(1:n)
-# x11(width = 10/2.54, height = 7/2.54)
 
+# bar plot for stress vector
 bp = barplot(
   stress, 
   ylab = "Stress", 
   xlab = "# of Dimensions", 
-  main='Stress by Number of Dimensions in metaMDS', 
-  mar = c(4,4,1,1), 
-  mgp = c(3, 1, 0), 
+  main='Stress by Number of Dimensions in metaMDS', # title
   las = 0,
-  ylim = c(0, 0.085),
-  col = colorRampPalette(
+  
+  # y axis scale. Default was causing the highest bar to clip into the title.
+  ylim = c(0, 0.085), 
+  col = colorRampPalette( # color range for the bars
     colors = c(
       "violet",
       "darkviolet", 
@@ -212,23 +148,29 @@ bp = barplot(
       ))(10),
   )
 
+# add text labels to each bar
 text(
   bp, 
-  stress, 
-  round(stress, 4), 
-  cex=0.7, 
-  pos=1, 
+  stress, # stress vector is used to mark points where text will appear
+  round(stress, 4), # text to display
+  pos=1, # pos=1 means just below the point
+  cex = 0.7, # scale to 70%
   col="white"
   )
 
-dev.off()
+dev.print(pdf, 'stress-per-dim.pdf')
 ```
 
+A 2-dimension NMDS seems to be the best way to go. 1 dimension is already
+decent (with a stress level of 0.0757), but 2 dimensions improves the stress
+level to 0.0482. Additional dimensions past this point appear to have 
+diminishing returns, and are not worth the added difficulty in visualizing the
+data. 
 
 ```{r metaNMDS with bray-curtis distances}
 soil.nmds = metaMDS(
-  comm = subset(soil, select = -c(Group, Contour, Depth)), 
-  distance = "bray", 
+  comm = subset(soil, select = -c(Group, Contour, Depth)),
+  distance = "bray", # using bray curtis dissimilarity
   k = 2, 
   trace = 0
   )
@@ -236,102 +178,110 @@ soil.nmds = metaMDS(
 ```
 
 
-```{r check stress}
+```{r check stress to verify}
 soil.nmds
 ```
-Stress of ~0.0475 is considered very good. 
+Stress of 0.0482 is considered very good. 
 
 
 ```{r ordination plot with contour labels}
-
 soil.ord = ordiplot(
   soil.nmds, 
-  type='none', 
-  main=paste0( # plot title
-    'Depth\nStress = ', 
+  type = 'none', 
+  main = paste0( # plot title
+    'Contour\nStress = ', 
     round(soil.nmds$stress,dig=4), # add stress label to title
     '\n Shown with 95% confidence intervals around each group'
     ),
-  xaxt='none', # remove tick marks from NMDS plots 
-  yaxt='none'
+  xaxt = 'none', # remove tick marks from NMDS plots 
+  yaxt = 'none'
+  #cex.main=2,
+  #cex.lab=1.3
   ) 
+
+?ordiplot
 
 points(
   soil.ord, 
-  what='sites', 
-  col=as.numeric(soil$Contour), # color by habitat
-  pch=as.numeric(soil$Contour) # shape by habitat
+  what = 'sites', 
+  col = as.numeric(soil$Contour), # color by habitat
+  pch = as.numeric(soil$Contour), # shape by habitat
   )
 
 legend( # add legend at bottom left
   'topleft', 
-  legend=levels(soil$Contour),
-  col=1:4, # make the colors match the points
-  pch=1:4, # make the shapes match
-  cex=0.75,
-  title="Contour"
+  legend = levels(soil$Contour),
+  col = 1:4, # make the colors match the points
+  pch = 1:4, # make the shapes match
+  cex = .7,
+  title = "Contour"
   )
 
 ordiellipse(
   soil.nmds, 
-  kind='sd', # how to include points, this means all (?)
-  draw="polygon", 
-  col=1:4,
-  alpha=0.2,
-  groups=soil$Contour, 
-  label=TRUE, 
+  kind = 'sd',
+  draw = "polygon", 
+  col = 1:4,
+  alpha = 0.2,
+  groups = soil$Contour, 
+  label = TRUE, 
   border = NULL, 
-  conf=0.95,
-  lwd=2
+  conf = 0.95,
+  lwd = 2
   )
 
+dev.print(pdf, 'ordination-contour.pdf')
 ```
 
+Contour groups show no discernible differentiation between the 95% confidence 
+ellipses.
 
 ```{r ordination plot with depth labels}
-
 soil.ord = ordiplot(
   soil.nmds, 
-  type='none', 
-  main=paste0( # plot title
+  type = 'none', 
+  main = paste0( # plot title
     'Depth\nStress = ', 
     round(soil.nmds$stress,dig=4), # add stress label to title
     '\n Shown with 95% confidence intervals around each group'
     ),
-  xaxt='none', # remove tick marks from NMDS plots 
-  yaxt='none'
+  xaxt = 'none', # remove tick marks from NMDS plots 
+  yaxt = 'none'
   ) 
 
 points(
   soil.ord, 
-  what='sites', 
-  col=as.numeric(soil$Depth), # color by habitat
-  pch=as.numeric(soil$Depth) # shape by habitat
+  what = 'sites', 
+  col = as.numeric(soil$Depth), # color by habitat
+  pch = as.numeric(soil$Depth), # shape by habitat
   )
 
 legend( # add legend at bottom left
   'topright', 
-  legend=levels(soil$Depth),
-  col=1:4, # make the colors match the points
-  pch=1:4, # make the shapes match
-  cex=0.8,
-  title="Depth"
+  legend = levels(soil$Depth),
+  col = 1:4, # make the colors match the points
+  pch = 1:4, # make the shapes match
+  cex = .7,
+  title = "Depth"
   )
 
 ordiellipse(
   soil.nmds, 
-  kind='sd', # how to include points, this means all (?)
-  draw="polygon", 
-  col=1:4,
-  alpha=0.2,
-  groups=soil$Depth, 
-  label=TRUE, 
+  kind = 'sd', # how to include points, this means all (?)
+  draw = "polygon", 
+  col = 1:4,
+  alpha = 0.2,
+  groups = soil$Depth, 
+  label = TRUE, 
   border = NULL, 
-  conf=0.95,
-  lwd=2
+  conf = 0.95,
+  lwd = 2
   )
 
+dev.print(pdf, 'ordination-depth.pdf')
 ```
 
-
+Sample depth level shows clear differentiation between 95% confidence ellipses 
+for soil depths that are not adjacent in order. However adjacent depth levels 
+cannot be differentiated with 95% confidence.
 
