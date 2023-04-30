@@ -38,6 +38,10 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 
+# OSX lock files
+*/~$*
+~$*
+
 # personal stuff
 .DS_Store
 /peer-reviews/
